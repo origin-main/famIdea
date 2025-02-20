@@ -6,30 +6,30 @@ import {
   Image,
   Text,
   TouchableOpacity,
+  ImageBackground,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useRouter } from "expo-router";
+import { COLORS } from "./constants";
 
 export default function Index() {
   const [username, setUsername] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
 
-  //color scheme
-  // #D5556F
-  // #F0F5F7
-  // #ADBB2C
-  // #9CD9FC
-  // #FFFFFF
+  const router = useRouter();
 
   return (
-    <View
+    <ImageBackground
+      source={require("../assets/images/background.png")} // Correct way to set a background image
       style={{
         flex: 1,
-        backgroundColor: "#FFFFFF",
         justifyContent: "center",
+        backgroundColor: COLORS.white,
         alignItems: "center",
       }}
+      resizeMode="cover"
     >
       <SafeAreaView style={{ alignItems: "center" }}>
         <Image
@@ -47,7 +47,7 @@ export default function Index() {
             onChangeText={setUsername}
             value={username}
             placeholder="Username"
-            placeholderTextColor="#999"
+            placeholderTextColor={COLORS.gray}
           />
         </View>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -58,7 +58,7 @@ export default function Index() {
             onChangeText={setEmail}
             value={email}
             placeholder="Email"
-            placeholderTextColor="#999"
+            placeholderTextColor={COLORS.gray}
           />
         </View>
 
@@ -69,7 +69,7 @@ export default function Index() {
             onChangeText={setPassword}
             value={password}
             placeholder="Password"
-            placeholderTextColor="#999"
+            placeholderTextColor={COLORS.gray}
             secureTextEntry
           />
         </View>
@@ -86,14 +86,14 @@ export default function Index() {
         </Text>
         <Text
           onPress={() => {
-            alert("sign up");
+            router.push("/sign_up");
           }}
           style={{ paddingTop: 30, justifyContent: "flex-end" }}
         >
           Don't have an account?
         </Text>
       </SafeAreaView>
-    </View>
+    </ImageBackground>
   );
 }
 
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     margin: 20,
   },
   button: {
-    backgroundColor: "#9CD9FC",
+    backgroundColor: COLORS.lightBlue,
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 30,
