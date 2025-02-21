@@ -7,4 +7,5 @@ export const COLORS = {
     black: "#000000",
     gray: "#999",       // Example: A gray color for placeholders
     red: "red",          // Example: Red for error messages
+    success: "#4cd475",  // Example: Green for success messages
   };

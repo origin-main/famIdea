@@ -73,7 +73,10 @@ export default function Index() {
             secureTextEntry
           />
         </View>
-        <TouchableOpacity style={styles.button} onPress={() => {}}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/(tabs)")}
+        >
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
         <Text

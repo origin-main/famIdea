@@ -206,7 +206,8 @@ export default function Index() {
         <TouchableOpacity
           style={styles.button}
           onPress={() => {
-            alert(JSON.stringify(formData, null, 2));
+            //alert(JSON.stringify(formData, null, 2));
+            router.push("/confirmation_page");
           }}
         >
           <Text style={styles.buttonText}>Sign Up</Text>
