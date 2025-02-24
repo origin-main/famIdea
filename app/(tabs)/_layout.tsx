@@ -3,11 +3,9 @@ import React from "react";
 import { Platform } from "react-native";
 
 import { HapticTab } from "@/components/HapticTab";
-import { IconSymbol } from "@/components/ui/IconSymbol";
 import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Ionicons } from "@expo/vector-icons";
-// import { Colors } from "@/constants/Colors";
-// import { useColorScheme } from "@/hooks/useColorScheme";
+import { COLORS } from "../../components/constants";
 
 export default function TabLayout() {
   //   const colorScheme = useColorScheme();
@@ -15,31 +13,40 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "light",
+        tabBarActiveTintColor: COLORS.lightBlue,
+        tabBarInactiveTintColor: "grey", // Unselected tab text color
+
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
         tabBarStyle: Platform.select({
           ios: {
-            // Use a transparent background on iOS to show the blur effect
             position: "absolute",
+            backgroundColor: COLORS.darkBlue,
           },
-          default: {},
+          default: {
+            backgroundColor: COLORS.darkBlue,
+          },
         }),
+        tabBarLabelStyle: {
+          color: "white",
+        },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: () => <Ionicons size={28} name="home" color={"black"} />,
+          tabBarIcon: () => <Ionicons size={28} name="home" color={"white"} />,
         }}
       />
       <Tabs.Screen
         name="messaging"
         options={{
           title: "Messaging",
-          tabBarIcon: () => <Ionicons size={28} name="mail" color={"black"} />,
+          tabBarIcon: () => (
+            <Ionicons size={28} name="chatbox-ellipses" color={"white"} />
+          ),
         }}
       />
       <Tabs.Screen
@@ -47,7 +54,7 @@ export default function TabLayout() {
         options={{
           title: "Appointment",
           tabBarIcon: () => (
-            <Ionicons size={28} name="calendar" color={"black"} />
+            <Ionicons size={28} name="calendar" color={"white"} />
           ),
         }}
       />
@@ -56,8 +63,14 @@ export default function TabLayout() {
         options={{
           title: "Profile",
           tabBarIcon: () => (
-            <Ionicons size={28} name="person-circle" color={"black"} />
+            <Ionicons size={28} name="person-circle-outline" color={"white"} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="search-page"
+        options={{
+          href: null, // Prevent it from appearing as a tab
         }}
       />
     </Tabs>

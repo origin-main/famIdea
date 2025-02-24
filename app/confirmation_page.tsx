@@ -10,7 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS } from "./constants";
+import { COLORS } from "../components/constants";
 
 export default function Index() {
   const [otp, setOtp] = useState(["", "", "", ""]);

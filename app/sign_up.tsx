@@ -11,7 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Dropdown } from "react-native-paper-dropdown";
 import { DatePickerInput } from "react-native-paper-dates";
 import { router } from "expo-router";
-import { COLORS } from "./constants";
+import { COLORS } from "../components/constants";
 
 type formData = {
   firstName: string;
