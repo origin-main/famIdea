@@ -1,6 +1,6 @@
 import { StyleSheet, Text, ImageBackground, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { COLORS } from "../../components/constants";
+import { COLORS } from "@/components/constants";
 
 export default function Index() {
   return (

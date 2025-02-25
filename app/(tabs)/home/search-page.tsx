@@ -7,7 +7,7 @@ import {
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { COLORS } from "../../components/constants";
+import { COLORS } from "../../../components/constants";
 import { IconButton, TextInput } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
@@ -104,6 +104,7 @@ export default function Index() {
           <ScrollView showsVerticalScrollIndicator={false}>
             {sampleData.map((_, index) => (
               <TouchableOpacity
+                onPressIn={() => router.push("/home/details-page")}
                 key={index}
                 style={{
                   width: "100%",

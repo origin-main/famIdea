@@ -7,7 +7,7 @@ import {
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { COLORS } from "../../components/constants";
+import { COLORS } from "@/components/constants";
 import { Avatar, TextInput } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
@@ -15,6 +15,24 @@ import { router } from "expo-router";
 
 export default function Index() {
   const [searchValue, setSearchValue] = useState("");
+
+  const [sampleData, setSampleData] = useState([
+    {
+      name: "Margarita birthing center",
+      rating: 4.5,
+      image: require("@/assets/images/service-icons/health-clinic.png"),
+    },
+    {
+      name: "Margarita birthing center",
+      rating: 4.5,
+      image: require("@/assets/images/service-icons/health-clinic.png"),
+    },
+    {
+      name: "Margarita birthing center",
+      rating: 4.5,
+      image: require("@/assets/images/service-icons/health-clinic.png"),
+    },
+  ]);
 
   return (
     <View>
@@ -202,7 +220,7 @@ export default function Index() {
               size={28}
               name="arrow-forward-circle"
               onPress={() => {
-                router.push("/search-page");
+                router.push("/(tabs)/home/search-page");
               }}
               color={"black"}
             />
@@ -212,111 +230,46 @@ export default function Index() {
             style={{ flexDirection: "row", justifyContent: "space-evenly" }}
           >
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <TouchableOpacity
-                style={{
-                  width: 150,
-                  height: 170,
-                  backgroundColor: COLORS.white,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: 5,
-                  marginRight: 10,
-                  paddingVertical: 10,
-                }}
-                onPress={() => {}}
-              >
-                <Image
+              {sampleData.map((data, index) => (
+                <TouchableOpacity
+                  key={index}
                   style={{
-                    width: "90%",
-                    height: "80%",
-                    backgroundColor: COLORS.lightBlue,
-                    objectFit: "fill",
-                    margin: 5,
+                    width: 150,
+                    height: 170,
+                    backgroundColor: COLORS.white,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 5,
+                    marginRight: 10,
+                    paddingVertical: 10,
                   }}
-                  source={require("@/assets/images/service-icons/health-clinic.png")}
-                />
-                <View style={{ alignItems: "center", gap: 3 }}>
-                  <Text style={{ fontSize: 12, fontWeight: "bold" }}>
-                    Margarita birthing center
-                  </Text>
-                  <View style={{ flexDirection: "row", gap: 5 }}>
-                    <Ionicons size={15} name="star-half" color={"black"} />
-                    <Text style={{ fontSize: 12, fontWeight: "bold" }}>
-                      4.5
-                    </Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{
-                  width: 150,
-                  height: 170,
-                  backgroundColor: COLORS.white,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: 5,
-                  marginRight: 10,
-                  paddingVertical: 10,
-                }}
-                onPress={() => {}}
-              >
-                <Image
-                  style={{
-                    width: "90%",
-                    height: "80%",
-                    backgroundColor: COLORS.lightBlue,
-                    objectFit: "fill",
-                    margin: 5,
+                  onPress={() => {
+                    router.push("/home/details-page");
                   }}
-                  source={require("@/assets/images/service-icons/health-clinic.png")}
-                />
-                <View style={{ alignItems: "center", gap: 3 }}>
-                  <Text style={{ fontSize: 12, fontWeight: "bold" }}>
-                    Margarita birthing center
-                  </Text>
-                  <View style={{ flexDirection: "row", gap: 5 }}>
-                    <Ionicons size={15} name="star-half" color={"black"} />
+                >
+                  <Image
+                    style={{
+                      width: "90%",
+                      height: "80%",
+                      backgroundColor: COLORS.lightBlue,
+                      objectFit: "fill",
+                      margin: 5,
+                    }}
+                    source={require("@/assets/images/service-icons/health-clinic.png")}
+                  />
+                  <View style={{ alignItems: "center", gap: 3 }}>
                     <Text style={{ fontSize: 12, fontWeight: "bold" }}>
-                      4.5
+                      Margarita birthing center
                     </Text>
+                    <View style={{ flexDirection: "row", gap: 5 }}>
+                      <Ionicons size={15} name="star-half" color={"black"} />
+                      <Text style={{ fontSize: 12, fontWeight: "bold" }}>
+                        4.5
+                      </Text>
+                    </View>
                   </View>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{
-                  width: 150,
-                  height: 170,
-                  backgroundColor: COLORS.white,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: 5,
-                  marginRight: 10,
-                  paddingVertical: 10,
-                }}
-                onPress={() => {}}
-              >
-                <Image
-                  style={{
-                    width: "90%",
-                    height: "80%",
-                    backgroundColor: COLORS.lightBlue,
-                    objectFit: "fill",
-                    margin: 5,
-                  }}
-                  source={require("@/assets/images/service-icons/health-clinic.png")}
-                />
-                <View style={{ alignItems: "center", gap: 3 }}>
-                  <Text style={{ fontSize: 12, fontWeight: "bold" }}>
-                    Margarita birthing center
-                  </Text>
-                  <View style={{ flexDirection: "row", gap: 5 }}>
-                    <Ionicons size={15} name="star-half" color={"black"} />
-                    <Text style={{ fontSize: 12, fontWeight: "bold" }}>
-                      4.5
-                    </Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
+                </TouchableOpacity>
+              ))}
             </ScrollView>
           </View>
         </View>

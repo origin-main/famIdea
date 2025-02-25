@@ -5,7 +5,7 @@ import { Platform } from "react-native";
 import { HapticTab } from "@/components/HapticTab";
 import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS } from "../../components/constants";
+import { COLORS } from "@/components/constants";
 
 export default function TabLayout() {
   //   const colorScheme = useColorScheme();
@@ -34,14 +34,14 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="home"
         options={{
           title: "Home",
           tabBarIcon: () => <Ionicons size={28} name="home" color={"white"} />,
         }}
       />
       <Tabs.Screen
-        name="messaging"
+        name="messaging/messaging"
         options={{
           title: "Messaging",
           tabBarIcon: () => (
@@ -50,7 +50,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="appointment"
+        name="appointment/appointment"
         options={{
           title: "Appointment",
           tabBarIcon: () => (
@@ -59,18 +59,12 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="profile/profile"
         options={{
           title: "Profile",
           tabBarIcon: () => (
             <Ionicons size={28} name="person-circle-outline" color={"white"} />
           ),
-        }}
-      />
-      <Tabs.Screen
-        name="search-page"
-        options={{
-          href: null, // Prevent it from appearing as a tab
         }}
       />
     </Tabs>
