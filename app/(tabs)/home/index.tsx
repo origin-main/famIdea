@@ -244,7 +244,7 @@ export default function Index() {
                     paddingVertical: 10,
                   }}
                   onPress={() => {
-                    router.push("/home/details-page");
+                    router.push("/home/clinic-page");
                   }}
                 >
                   <Image

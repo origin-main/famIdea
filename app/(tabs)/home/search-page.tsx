@@ -104,7 +104,7 @@ export default function Index() {
           <ScrollView showsVerticalScrollIndicator={false}>
             {sampleData.map((_, index) => (
               <TouchableOpacity
-                onPressIn={() => router.push("/home/details-page")}
+                onPressIn={() => router.push("/home/clinic-page")}
                 key={index}
                 style={{
                   width: "100%",

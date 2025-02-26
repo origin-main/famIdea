@@ -12,8 +12,12 @@ import { IconButton, TextInput } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { useRouter } from "expo-router";
+import MaternalDeliveryModal from "./serviceModals/MaternalDeliveryModal";
 
 export default function Index() {
+  const [maternalDeliveryModalVisible, setMaternalDeliveryModalVisible] =
+    useState<boolean>(false);
+
   const [sampleData, setSampleData] = useState([
     {
       name: "Margarita birthing center",
@@ -209,7 +213,12 @@ export default function Index() {
                   alignItems: "center",
                 }}
               >
-                <TouchableOpacity style={styles.button} onPress={() => {}}>
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={() => {
+                    setMaternalDeliveryModalVisible(true);
+                  }}
+                >
                   <Image
                     style={{
                       width: 50,
@@ -229,7 +238,6 @@ export default function Index() {
                 </Text>
               </View>
             </View>
-
             <View
               style={{ flexDirection: "row", justifyContent: "space-evenly" }}
             >
@@ -240,7 +248,12 @@ export default function Index() {
                   alignItems: "center",
                 }}
               >
-                <TouchableOpacity style={styles.button} onPress={() => {}}>
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={() => {
+                    setMaternalDeliveryModalVisible(true);
+                  }}
+                >
                   <Image
                     style={{
                       width: 50,
@@ -287,6 +300,10 @@ export default function Index() {
               </View>
             </View>
           </ScrollView>
+          <MaternalDeliveryModal
+            visible={maternalDeliveryModalVisible}
+            setVisible={setMaternalDeliveryModalVisible}
+          />
         </View>
       </SafeAreaView>
     </View>
