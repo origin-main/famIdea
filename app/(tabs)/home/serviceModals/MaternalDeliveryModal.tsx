@@ -1,5 +1,6 @@
 import { COLORS } from "@/components/constants";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import * as React from "react";
 import { Image, View, StyleSheet, TouchableOpacity } from "react-native";
 import { Divider, Modal, Portal, Text } from "react-native-paper";
@@ -105,7 +106,9 @@ const MaternalDeliveryModal: React.FC<MaternalDeliveryModalProps> = ({
               alignItems: "center",
               borderRadius: 10,
             }}
-            onPress={() => {}}
+            onPress={() => {
+              router.push("/home/schedule-appointment");
+            }}
           >
             <View
               style={{

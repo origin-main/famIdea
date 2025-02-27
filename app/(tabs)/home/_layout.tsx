@@ -11,6 +11,10 @@ export default function NotificationsLayout() {
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="search-page" options={{ headerShown: false }} />
       <Stack.Screen name="clinic-page" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="schedule-appointment"
+        options={{ headerShown: false }}
+      />
     </Stack>
   );
 }
