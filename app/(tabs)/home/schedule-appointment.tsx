@@ -1,22 +1,26 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  Image,
-  TouchableOpacity,
-  ScrollView,
-} from "react-native";
+import { StyleSheet, Text, View, Image, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS } from "../../../components/constants";
-import { IconButton, TextInput } from "react-native-paper";
+import { Button, IconButton, TextInput } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { useRouter } from "expo-router";
-import { Calendar, CalendarList, Agenda } from "react-native-calendars";
+import { Calendar } from "react-native-calendars";
 
 export default function Index() {
   const router = useRouter();
   const [selected, setSelected] = useState("");
+
+  const timeSlots = [
+    { label: "9:00", value: "9:00" },
+    { label: "10:00", value: "10:00" },
+    { label: "11:00", value: "11:00" },
+    { label: "11:00", value: "11:00" },
+    { label: "11:00", value: "11:00" },
+    { label: "11:00", value: "11:00" },
+    { label: "11:00", value: "11:00" },
+    { label: "11:00", value: "11:00" },
+  ];
 
   return (
     <View>
@@ -32,10 +36,8 @@ export default function Index() {
 
         <View
           style={{
-            flex: 1,
             width: "100%",
             padding: 10,
-            height: "100%",
             justifyContent: "center",
           }}
         >
@@ -45,7 +47,6 @@ export default function Index() {
               height: 170,
               backgroundColor: COLORS.white,
               justifyContent: "center",
-              paddingVertical: 10,
             }}
           >
             <View
@@ -95,18 +96,54 @@ export default function Index() {
               </View>
             </View>
           </View>
-          <Calendar
-            onDayPress={(day) => {
-              setSelected(day.dateString);
+          <View
+            style={{
+              justifyContent: "center",
+              alignItems: "center",
             }}
-            markedDates={{
-              [selected]: {
-                selected: true,
-                disableTouchEvent: true,
-                selectedDotColor: "orange",
-              },
+          >
+            <Calendar
+              onDayPress={(day: any) => {
+                setSelected(day.dateString);
+              }}
+              markedDates={{
+                [selected]: {
+                  selected: true,
+                  disableTouchEvent: true,
+                  selectedDotColor: "orange",
+                },
+              }}
+              style={{
+                width: 400, // Adjust width to fit screen
+                height: 350, // Set a fixed height to prevent overlap
+              }}
+              theme={{
+                textDayFontSize: 12,
+                textMonthFontSize: 14,
+                textDayHeaderFontSize: 12,
+              }}
+            />
+          </View>
+          <View
+            style={{
+              flexDirection: "row",
+              gap: 5,
+              margin: 10,
+              maxWidth: "100%",
+              justifyContent: "center",
+              flexWrap: "wrap",
             }}
-          />
+          >
+            {timeSlots.map((data, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.button}
+                onPress={() => {}}
+              >
+                <Text>{data.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
       </SafeAreaView>
     </View>
@@ -135,25 +172,20 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     alignItems: "flex-start",
   },
-  button: {
-    backgroundColor: COLORS.lightBlue,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 20,
-    width: 70,
-    height: 70,
-  },
   title: {
     fontSize: 20,
     fontWeight: "bold",
     color: "black",
   },
-  subtitle: {
-    fontSize: 15,
-    textAlign: "center",
-    color: "white",
+  button: {
+    backgroundColor: COLORS.white,
+    borderRadius: 10,
+    borderStyle: "solid",
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 10,
+    width: 80,
+    height: 50,
   },
 });

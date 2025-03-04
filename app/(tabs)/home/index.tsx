@@ -65,7 +65,14 @@ export default function Index() {
             </View>
           </View>
           <View>
-            <Ionicons size={28} name="notifications" color={"white"} />
+            <Ionicons
+              size={28}
+              name="notifications"
+              color={"white"}
+              onPress={() => {
+                router.push("/home/notifications");
+              }}
+            />
           </View>
         </View>
 

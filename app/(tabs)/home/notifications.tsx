@@ -44,14 +44,14 @@ export default function Index() {
         >
           <IconButton
             size={24}
-            icon="email-plus"
+            icon="bell-plus"
             mode="outlined"
             iconColor={"black"}
             onPress={() => {
               alert("create msg");
             }}
           />
-          <Text style={{ fontSize: 27 }}>Messages</Text>
+          <Text style={{ fontSize: 27 }}>Notifications</Text>
         </View>
         <View
           style={{
@@ -97,7 +97,11 @@ export default function Index() {
                         {data.messenger}
                       </Text>
                       {data.isRead ? null : (
-                        <Ionicons name="mail-unread" size={15} color="red" />
+                        <Ionicons
+                          name="notifications-circle"
+                          size={20}
+                          color="red"
+                        />
                       )}
                     </View>
                     <View style={{ flexDirection: "row" }}>

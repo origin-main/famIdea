@@ -15,6 +15,7 @@ export default function NotificationsLayout() {
         name="schedule-appointment"
         options={{ headerShown: false }}
       />
+      <Stack.Screen name="notifications" options={{ headerShown: false }} />
     </Stack>
   );
 }
