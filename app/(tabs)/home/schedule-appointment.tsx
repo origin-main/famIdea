@@ -15,11 +15,11 @@ export default function Index() {
     { label: "9:00", value: "9:00" },
     { label: "10:00", value: "10:00" },
     { label: "11:00", value: "11:00" },
-    { label: "11:00", value: "11:00" },
-    { label: "11:00", value: "11:00" },
-    { label: "11:00", value: "11:00" },
-    { label: "11:00", value: "11:00" },
-    { label: "11:00", value: "11:00" },
+    { label: "1:00", value: "1:00" },
+    { label: "2:00", value: "2:00" },
+    { label: "3:00", value: "3:00" },
+    { label: "4:00", value: "4:00" },
+    { label: "5:00", value: "5:00" },
   ];
 
   return (
