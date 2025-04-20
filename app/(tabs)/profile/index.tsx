@@ -3,10 +3,29 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS } from "@/components/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { Avatar, Button, IconButton } from "react-native-paper";
+import { Avatar } from "react-native-paper";
+import { supabase } from "@/utils/supabase";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Index() {
     const router = useRouter();
+    const { user, setUser } = useAuth();
+
+    const handleLogout = async () => {
+        supabase.auth.signOut();
+        try {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+
+            setUser(null);
+
+            // Navigate to login
+            router.replace("/login");
+        } catch (err: any) {
+            console.error("Error signing out:", err.message);
+            alert("There was a problem signing out. Please try again.");
+        }
+    };
 
     return (
         <View>
@@ -47,8 +66,8 @@ export default function Index() {
                                 alignItems: "center",
                             }}
                         >
-                            <Text style={styles.title}>Hi, Avery Brown</Text>
-                            <Text style={styles.subtitle}>averybrown@gmail.com</Text>
+                            <Text style={styles.title}>Hi, {`${user?.profile?.first_name} ${user?.profile?.last_name}`}</Text>
+                            <Text style={styles.subtitle}>{user?.email}</Text>
                         </View>
                     </View>
                 </View>
@@ -246,7 +265,7 @@ export default function Index() {
                     <TouchableOpacity
                         style={styles.button}
                         onPress={() => {
-                            router.push("/");
+                            handleLogout();
                         }}
                     >
                         <View

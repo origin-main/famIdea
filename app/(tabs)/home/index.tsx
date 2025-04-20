@@ -5,8 +5,10 @@ import { Avatar, TextInput } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { router } from "expo-router";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Index() {
+    const { user } = useAuth();
     const [searchValue, setSearchValue] = useState("");
 
     const [sampleData, setSampleData] = useState([
@@ -50,7 +52,7 @@ export default function Index() {
                                 alignItems: "flex-start",
                             }}
                         >
-                            <Text style={styles.title}>Hi, Avery Brown</Text>
+                            <Text style={styles.title}>Hi, {`${user?.profile?.first_name} ${user?.profile?.last_name}`}</Text>
                             <Text style={styles.subtitle}>Welcome back!</Text>
                         </View>
                     </View>
