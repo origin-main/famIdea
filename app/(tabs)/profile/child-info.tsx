@@ -9,22 +9,25 @@ export default function Index() {
     const router = useRouter();
 
     const [formData, setFormData] = useState({
-        fullName: "Avery",
-        middleName: "Smith",
-        lastName: "Brown",
+        fullName: "Sofia",
+        middleName: "",
+        lastName: "Smith",
         dateOfBirth: "12/12/1990",
-        address: "Cebu City",
-        phoneNumber: "09123456789",
-        emergencyContact: "John Brown",
-        emergencyContactNumber: "09193242123",
-        estimatedDueDate: "01/01/2020",
-        previousPregnancies: "2",
-        deliveries: "1",
-        complications: "none",
-        medicalConditions: "none",
-        allergies: "crabs",
-        medications: "Myra E, Berocca",
+        birthWeight: "3.5kg",
+        birthLength: "50cm",
+        gender: "Female",
         bloodType: "A+",
+        medicalConditions: "none",
+
+        allergies: "shrimps, shellfish",
+        medications: "none",
+        immunizations: "covid vaccine",
+        developmentalMilestones: "crawling",
+        retrictisonsOrSpecialNeeds: "none",
+        sleepPatternsAndHabits: "none",
+        behavioralConcerns: "none",
+        familyMedicalHistory: "none",
+        otherRelevantInfo: "none",
     });
 
     const handleSave = () => {
@@ -77,12 +80,12 @@ export default function Index() {
                                 alignItems: "center",
                             }}
                         >
-                            <Text style={styles.title}>Hi, Avery Brown</Text>
+                            <Text style={styles.title}>Sofia Smith</Text>
                         </View>
                     </View>
                 </View>
 
-                {/* Patient Information  */}
+                {/* Child Information  */}
                 <View
                     style={{
                         flexDirection: "column",
@@ -102,7 +105,7 @@ export default function Index() {
                             fontWeight: "bold",
                         }}
                     >
-                        Patient Information
+                        Child Information
                     </Text>
 
                     {/* First Name  */}
@@ -153,51 +156,63 @@ export default function Index() {
                         ></TextInput>
                     </View>
 
-                    {/* Address  */}
+                    {/* Birth Weight  */}
                     <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Address:</Text>
+                        <Text style={styles.infoLabel}>Birth Weight:</Text>
                         <TextInput
                             style={styles.infoText}
                             mode="outlined"
                             dense={true}
-                            value={formData.address}
-                            onChangeText={(value) => setFormData({ ...formData, address: value })}
+                            value={formData.birthWeight}
+                            onChangeText={(value) => setFormData({ ...formData, birthWeight: value })}
                         ></TextInput>
                     </View>
 
-                    {/* Phone Number  */}
+                    {/* Birth Length  */}
                     <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Phone Number:</Text>
+                        <Text style={styles.infoLabel}>Birth Length:</Text>
                         <TextInput
                             style={styles.infoText}
                             mode="outlined"
                             dense={true}
-                            value={formData.phoneNumber}
-                            onChangeText={(value) => setFormData({ ...formData, phoneNumber: value })}
+                            value={formData.birthLength}
+                            onChangeText={(value) => setFormData({ ...formData, birthLength: value })}
                         ></TextInput>
                     </View>
 
-                    {/* Emergency Contact Person */}
+                    {/* Gender */}
                     <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>{`Emergency \nContact Person:`}</Text>
+                        <Text style={styles.infoLabel}>Gender:</Text>
                         <TextInput
                             style={styles.infoText}
                             mode="outlined"
                             dense={true}
-                            value={formData.emergencyContact}
-                            onChangeText={(value) => setFormData({ ...formData, emergencyContact: value })}
+                            value={formData.gender}
+                            onChangeText={(value) => setFormData({ ...formData, gender: value })}
                         ></TextInput>
                     </View>
 
-                    {/* Emergency Contact Number */}
+                    {/* Blood Type */}
                     <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>{`Emergency \nContact Number:`}</Text>
+                        <Text style={styles.infoLabel}>Blood Type:</Text>
                         <TextInput
                             style={styles.infoText}
                             mode="outlined"
                             dense={true}
-                            value={formData.emergencyContactNumber}
-                            onChangeText={(value) => setFormData({ ...formData, emergencyContactNumber: value })}
+                            value={formData.bloodType}
+                            onChangeText={(value) => setFormData({ ...formData, bloodType: value })}
+                        ></TextInput>
+                    </View>
+
+                    {/* Existing Medical Condition */}
+                    <View style={styles.infoRow}>
+                        <Text style={styles.infoLabel}>Existing Medical Condition:</Text>
+                        <TextInput
+                            style={styles.infoText}
+                            mode="outlined"
+                            dense={true}
+                            value={formData.medicalConditions}
+                            onChangeText={(value) => setFormData({ ...formData, medicalConditions: value })}
                         ></TextInput>
                     </View>
                 </View>
@@ -221,72 +236,12 @@ export default function Index() {
                             fontWeight: "bold",
                         }}
                     >
-                        Medical & Pregnancy History
+                        Medical History
                     </Text>
-
-                    {/* Estimated Due Date  */}
-                    <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Estimated Due Date (if applicable):</Text>
-                        <TextInput
-                            style={styles.infoText}
-                            mode="outlined"
-                            dense={true}
-                            value={formData.estimatedDueDate}
-                            onChangeText={(value) => setFormData({ ...formData, estimatedDueDate: value })}
-                        ></TextInput>
-                    </View>
-
-                    {/* Number of Previous Pregnancies */}
-                    <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Number of Previous Pregnancies:</Text>
-                        <TextInput
-                            style={styles.infoText}
-                            mode="outlined"
-                            dense={true}
-                            value={formData.previousPregnancies}
-                            onChangeText={(value) => setFormData({ ...formData, previousPregnancies: value })}
-                        ></TextInput>
-                    </View>
-
-                    {/* Number of Deliveries  */}
-                    <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Number of Deliveries:</Text>
-                        <TextInput
-                            style={styles.infoText}
-                            mode="outlined"
-                            dense={true}
-                            value={formData.deliveries}
-                            onChangeText={(value) => setFormData({ ...formData, deliveries: value })}
-                        ></TextInput>
-                    </View>
-
-                    {/* History of Miscarriages/Complications  */}
-                    <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>History of Miscarriages/Complications (if any):</Text>
-                        <TextInput
-                            style={styles.infoText}
-                            mode="outlined"
-                            dense={true}
-                            value={formData.complications}
-                            onChangeText={(value) => setFormData({ ...formData, complications: value })}
-                        ></TextInput>
-                    </View>
-
-                    {/* Existing Medical Conditions */}
-                    <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Existing Medical Conditions (e.g., diabetes, hypertension, heart issues, etc.):</Text>
-                        <TextInput
-                            style={styles.infoText}
-                            mode="outlined"
-                            dense={true}
-                            value={formData.medicalConditions}
-                            onChangeText={(value) => setFormData({ ...formData, medicalConditions: value })}
-                        ></TextInput>
-                    </View>
 
                     {/* Allergies */}
                     <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Allergies (medications, foods, latex, etc.):</Text>
+                        <Text style={styles.infoLabel}>Allergies:</Text>
                         <TextInput
                             style={styles.infoText}
                             mode="outlined"
@@ -308,17 +263,102 @@ export default function Index() {
                         ></TextInput>
                     </View>
 
-                    {/* Blood Type */}
+                    {/* Existing Medical Conditions */}
                     <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Blood Type:</Text>
+                        <Text style={styles.infoLabel}>Existing Medical Conditions:</Text>
                         <TextInput
                             style={styles.infoText}
                             mode="outlined"
                             dense={true}
-                            value={formData.bloodType}
-                            onChangeText={(value) => setFormData({ ...formData, bloodType: value })}
+                            value={formData.medicalConditions}
+                            onChangeText={(value) => setFormData({ ...formData, medicalConditions: value })}
                         ></TextInput>
                     </View>
+
+                    {/* Immunization History */}
+                    <View style={styles.infoRow}>
+                        <Text style={styles.infoLabel}>Immunization History:</Text>
+                        <TextInput
+                            style={styles.infoText}
+                            mode="outlined"
+                            dense={true}
+                            value={formData.immunizations}
+                            onChangeText={(value) => setFormData({ ...formData, immunizations: value })}
+                        ></TextInput>
+                    </View>
+
+                    {/* Developmental Milestones */}
+                    <View style={styles.infoRow}>
+                        <Text style={styles.infoLabel}>Developmental Milestones:</Text>
+                        <TextInput
+                            style={styles.infoText}
+                            mode="outlined"
+                            dense={true}
+                            value={formData.developmentalMilestones}
+                            onChangeText={(value) => setFormData({ ...formData, developmentalMilestones: value })}
+                        ></TextInput>
+                    </View>
+                    
+                    {/* Dietary Restrictions or Special Needs */}
+                    <View style={styles.infoRow}>
+                        <Text style={styles.infoLabel}>Dietary Restrictions or Special Needs:</Text>
+                        <TextInput
+                            style={styles.infoText}
+                            mode="outlined"
+                            dense={true}
+                            value={formData.retrictisonsOrSpecialNeeds}
+                            onChangeText={(value) => setFormData({ ...formData, retrictisonsOrSpecialNeeds: value })}
+                        ></TextInput>
+                    </View>
+
+                    {/* Sleep Patterns and Habits */}
+                    <View style={styles.infoRow}>
+                        <Text style={styles.infoLabel}>Sleep Patterns and Habits:</Text>
+                        <TextInput
+                            style={styles.infoText}
+                            mode="outlined"
+                            dense={true}
+                            value={formData.sleepPatternsAndHabits}
+                            onChangeText={(value) => setFormData({ ...formData, sleepPatternsAndHabits: value })}
+                        ></TextInput>
+                    </View>
+
+                    {/* Behavioral Concerns or Observations */}
+                    <View style={styles.infoRow}>
+                        <Text style={styles.infoLabel}>Behavioral Concerns or Observations:</Text>
+                        <TextInput
+                            style={styles.infoText}
+                            mode="outlined"
+                            dense={true}
+                            value={formData.behavioralConcerns}
+                            onChangeText={(value) => setFormData({ ...formData, behavioralConcerns: value })}
+                        ></TextInput>
+                    </View>
+
+                    {/* Family Medical History */}
+                    <View style={styles.infoRow}>
+                        <Text style={styles.infoLabel}>Family Medical History (relevant conditions):</Text>
+                        <TextInput
+                            style={styles.infoText}
+                            mode="outlined"
+                            dense={true}
+                            value={formData.familyMedicalHistory}
+                            onChangeText={(value) => setFormData({ ...formData, familyMedicalHistory: value })}
+                        ></TextInput>
+                    </View>
+
+                    {/* Other medical Information */}
+                    <View style={styles.infoRow}>
+                        <Text style={styles.infoLabel}>Other Relevant Medical Information:</Text>
+                        <TextInput
+                            style={styles.infoText}
+                            mode="outlined"
+                            dense={true}
+                            value={formData.otherRelevantInfo}
+                            onChangeText={(value) => setFormData({ ...formData, otherRelevantInfo: value })}
+                        ></TextInput>
+                    </View>
+
                 </View>
 
                 <Button mode="contained" onPress={handleSave} style={styles.saveButton}>

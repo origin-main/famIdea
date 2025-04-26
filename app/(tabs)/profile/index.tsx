@@ -127,7 +127,9 @@ export default function Index() {
                     </Text>
 
                     {/* Child Information  */}
-                    <TouchableOpacity style={styles.button} onPress={() => {}}>
+                    <TouchableOpacity style={styles.button} onPress={() => {
+                            router.push("/profile/child-info");
+                        }}>
                         <View
                             style={{
                                 width: 40,
