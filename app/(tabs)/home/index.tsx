@@ -91,15 +91,20 @@ export default function Index() {
                         paddingVertical: 10,
                     }}
                 >
-                    <TextInput
-                        mode="outlined"
-                        theme={{ roundness: 10 }}
-                        onChangeText={setSearchValue}
-                        value={searchValue}
-                        placeholder="Birthing Centers near you"
-                        left={<TextInput.Icon icon="magnify" />}
-                        placeholderTextColor={COLORS.gray}
-                    />
+                    <TouchableOpacity
+                        onPress={() => {
+                            router.push("/(tabs)/home/search-page");
+                        }}
+                    >
+                        <TextInput
+                            readOnly
+                            mode="outlined"
+                            theme={{ roundness: 10 }}
+                            placeholder="Birthing Centers near you"
+                            left={<TextInput.Icon icon="magnify" />}
+                            placeholderTextColor={COLORS.gray}
+                        />
+                    </TouchableOpacity>
                 </View>
 
                 {/* Services */}
@@ -208,6 +213,7 @@ export default function Index() {
                         style={{
                             flexDirection: "row",
                             justifyContent: "space-between",
+                            alignItems: "center",
                             paddingBottom: 5,
                         }}
                     >
