@@ -128,8 +128,8 @@ export default function Index() {
 
                     {/* Child Information  */}
                     <TouchableOpacity style={styles.button} onPress={() => {
-                            router.push("/profile/child-info");
-                        }}>
+                        router.push("/profile/child-info");
+                    }}>
                         <View
                             style={{
                                 width: 40,
@@ -156,7 +156,9 @@ export default function Index() {
                     </TouchableOpacity>
 
                     {/* Security and Privacy  */}
-                    <TouchableOpacity style={styles.button} onPress={() => {}}>
+                    <TouchableOpacity style={styles.button} onPress={() => {
+                        router.push("/profile/security-info");
+                    }}>
                         <View
                             style={{
                                 width: 40,
@@ -183,7 +185,7 @@ export default function Index() {
                     </TouchableOpacity>
 
                     {/* FAQs  */}
-                    <TouchableOpacity style={styles.button} onPress={() => {}}>
+                    <TouchableOpacity style={styles.button} onPress={() => { }}>
                         <View
                             style={{
                                 width: 40,
@@ -210,7 +212,9 @@ export default function Index() {
                     </TouchableOpacity>
 
                     {/* Favorites  */}
-                    <TouchableOpacity style={styles.button} onPress={() => {}}>
+                    <TouchableOpacity style={styles.button} onPress={() => {
+                        router.push("/profile/favorites");
+                    }}>
                         <View
                             style={{
                                 width: 40,
@@ -237,7 +241,7 @@ export default function Index() {
                     </TouchableOpacity>
 
                     {/* Feedbacks  */}
-                    <TouchableOpacity style={styles.button} onPress={() => {}}>
+                    <TouchableOpacity style={styles.button} onPress={() => { }}>
                         <View
                             style={{
                                 width: 40,
