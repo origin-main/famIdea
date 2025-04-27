@@ -141,7 +141,10 @@ export default function Index() {
                 alert("Account created successfully!");
 
                 // Navigate to the confirmation page
-                router.push("/confirmation_page");
+                router.push({
+                    pathname: "/confirmation_page",
+                    params: { email: formData.email },
+                });
             } catch (error: any) {
                 console.error(error?.message || "Unknown error occurred");
             } finally {
