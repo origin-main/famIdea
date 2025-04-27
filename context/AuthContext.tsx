@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/utils/supabase";
 
-// Define the Profile type to hold the profile data.
 type Profile = {
     first_name: string;
     middle_name?: string;
@@ -11,13 +10,13 @@ type Profile = {
     birthday?: string;
     sex?: string;
     address?: string;
+    profile_picture_url?: string;
 };
 
-// Define the User type, which includes both auth data and profile data.
 type User = {
     id: string;
     email: string;
-    profile: Profile | null; // Include profile data as part of the user object
+    profile: Profile | null;
 };
 
 type AuthContextType = {
@@ -36,7 +35,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const fetchProfile = async (userId: string) => {
         const { data, error } = await supabase
             .from("profiles")
-            .select("first_name, middle_name, last_name, contact_number, age, birthday, sex, address")
+            .select("first_name, middle_name, last_name, contact_number, age, birthday, sex, address, profile_picture_url")
             .eq("id", userId)
             .single();
 
@@ -48,7 +47,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     useEffect(() => {
-        // Initialize by checking the session and setting user & profile
+        let profileChannel: any;
+
         const initialize = async () => {
             const { data } = await supabase.auth.getSession();
             const currentUser = data?.session?.user ?? null;
@@ -57,23 +57,53 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 const profile = await fetchProfile(currentUser.id);
                 setUser({
                     id: currentUser.id,
-                    email: currentUser.email ?? "", // Fallback to an empty string if email is undefined
+                    email: currentUser.email ?? "",
                     profile,
                 });
+
+                // Listen for changes in the current user's profile
+                profileChannel = supabase
+                    .channel("profile-updates")
+                    .on(
+                        "postgres_changes",
+                        {
+                            event: "UPDATE",
+                            schema: "public",
+                            table: "profiles",
+                            filter: `id=eq.${currentUser.id}`,
+                        },
+                        async (payload) => {
+                            console.log("Profile updated:", payload);
+
+                            setUser((prevUser) => {
+                                if (!prevUser) return prevUser;
+
+                                return {
+                                    ...prevUser,
+                                    profile: {
+                                        ...prevUser.profile,
+                                        ...payload.new,
+                                    } as Profile,
+                                };
+                            });
+                        }
+                    )
+                    .subscribe();
             }
+
             setLoading(false);
         };
 
         initialize();
 
-        // Listen for authentication state changes (login/logout)
-        const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+        // Listen for auth changes
+        const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
             const currentUser = session?.user ?? null;
             if (currentUser) {
                 const profile = await fetchProfile(currentUser.id);
                 setUser({
                     id: currentUser.id,
-                    email: currentUser.email ?? "", // Fallback to an empty string if email is undefined
+                    email: currentUser.email ?? "",
                     profile,
                 });
             } else {
@@ -81,9 +111,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
         });
 
-        // Cleanup listener on component unmount
+        // Cleanup listeners on component unmount
         return () => {
-            listener.subscription.unsubscribe();
+            authListener?.subscription.unsubscribe();
+            profileChannel?.unsubscribe();
         };
     }, []);
 

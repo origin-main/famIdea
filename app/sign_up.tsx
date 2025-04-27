@@ -1,12 +1,5 @@
 import React, { useState } from "react";
-import {
-    View,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    ImageBackground,
-    ScrollView
-} from "react-native";
+import { View, StyleSheet, Text, TouchableOpacity, ImageBackground, ScrollView } from "react-native";
 import { Divider, TextInput, ActivityIndicator } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Dropdown } from "react-native-paper-dropdown";
@@ -73,7 +66,7 @@ export default function Index() {
             formData.password,
         ];
 
-        const hasEmptyField = requiredFields.some(field => !field.trim());
+        const hasEmptyField = requiredFields.some((field) => !field.trim());
         const isUnderage = formData.age < 18;
         const isInvalidPhone = formData.phoneNumber.length !== 11;
         const isWeakPassword = formData.password.length < 6;
@@ -86,7 +79,6 @@ export default function Index() {
         setSubmitted(true);
 
         if (checkFormValue()) {
-            // TODO: add validation (require all except middle name)
             try {
                 //sign up user
                 const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -104,8 +96,8 @@ export default function Index() {
                     throw new Error("No user ID returned");
                 }
 
-                // insert to db
-                const { error: dbError } = await supabase.from("profiles").insert([
+                // Insert into profiles
+                const { error: profileError } = await supabase.from("profiles").insert([
                     {
                         id: userId,
                         role: "patient",
@@ -120,21 +112,45 @@ export default function Index() {
                     },
                 ]);
 
-                if (dbError) {
-                    throw new Error(`Insert profile error: ${dbError?.message}`);
+                if (profileError) {
+                    throw new Error(`Insert profile error: ${profileError.message}`);
+                }
+
+                // Insert into patient_info
+                const { error: patientInfoError } = await supabase.from("patient_info").insert([
+                    {
+                        id: userId,
+                    },
+                ]);
+
+                if (patientInfoError) {
+                    throw new Error(`Insert patient_info error: ${patientInfoError.message}`);
+                }
+
+                // Insert into child_info
+                const { error: childInfoError } = await supabase.from("child_info").insert([
+                    {
+                        id: userId,
+                    },
+                ]);
+
+                if (childInfoError) {
+                    throw new Error(`Insert child_info error: ${childInfoError.message}`);
                 }
 
                 alert("Account created successfully!");
 
                 // Navigate to the confirmation page
-                router.push("/confirmation_page");
+                router.push({
+                    pathname: "/confirmation_page",
+                    params: { email: formData.email },
+                });
             } catch (error: any) {
                 console.error(error?.message || "Unknown error occurred");
             } finally {
                 setLoading(false);
             }
-        }
-        else {
+        } else {
             setLoading(false);
             alert("Please fill in all required fields correctly.");
         }
@@ -162,7 +178,7 @@ export default function Index() {
                 >
                     <Text style={styles.title}>Create Your Account</Text>
                     {loading ? (
-                        <ActivityIndicator animating={true} color={COLORS.lightBlue} />
+                        <ActivityIndicator style={{ flex: 1 }} color={COLORS.lightBlue} />
                     ) : (
                         <View style={styles.container}>
                             <TextInput
@@ -174,9 +190,7 @@ export default function Index() {
                                 placeholderTextColor={COLORS.gray}
                                 theme={{ roundness: 30 }}
                             />
-                            {submitted && formData.firstName == "" ? (
-                                <Text style={{ color: "red" }}>required</Text>
-                            ) : null}
+                            {submitted && formData.firstName == "" ? <Text style={{ color: "red" }}>required</Text> : null}
                             <TextInput
                                 mode="outlined"
                                 style={styles.input}
@@ -195,9 +209,7 @@ export default function Index() {
                                 placeholderTextColor={COLORS.gray}
                                 theme={{ roundness: 30 }}
                             />
-                            {submitted && formData.lastName == "" ? (
-                                <Text style={{ color: "red" }}>required</Text>
-                            ) : null}
+                            {submitted && formData.lastName == "" ? <Text style={{ color: "red" }}>required</Text> : null}
                             <TextInput
                                 mode="outlined"
                                 style={styles.input}
@@ -207,9 +219,7 @@ export default function Index() {
                                 placeholderTextColor={COLORS.gray}
                                 theme={{ roundness: 30 }}
                             />
-                            {submitted && formData.address == "" ? (
-                                <Text style={{ color: "red" }}>required</Text>
-                            ) : null}
+                            {submitted && formData.address == "" ? <Text style={{ color: "red" }}>required</Text> : null}
                             {/* Age, Birthdate and Gender */}
                             <View
                                 style={{
@@ -229,6 +239,7 @@ export default function Index() {
                                     placeholder="Age"
                                     placeholderTextColor={COLORS.gray}
                                     keyboardType="numeric"
+                                    maxLength={2}
                                 />
                                 <DatePickerInput
                                     mode="outlined"
@@ -258,13 +269,15 @@ export default function Index() {
                             >
                                 {submitted && (formData.age == 0 || formData.age < 18) ? (
                                     <Text style={{ color: "red" }}>required</Text>
-                                ) : <Text style={{ color: "red" }}></Text>}
+                                ) : (
+                                    <Text style={{ color: "red" }}></Text>
+                                )}
                                 {submitted && !formData.birthday ? (
                                     <Text style={{ color: "red" }}>required</Text>
-                                ) : <Text style={{ color: "red" }}></Text>}
-                                {submitted && !formData.sex ? (
-                                    <Text style={{ color: "red" }}>required</Text>
-                                ) : <Text style={{ color: "red" }}></Text>}
+                                ) : (
+                                    <Text style={{ color: "red" }}></Text>
+                                )}
+                                {submitted && !formData.sex ? <Text style={{ color: "red" }}>required</Text> : <Text style={{ color: "red" }}></Text>}
                             </View>
 
                             <TextInput
@@ -273,9 +286,7 @@ export default function Index() {
                                 onChangeText={(value) => {
                                     handleChange("email", value);
                                     const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-                                    setEmailError(
-                                        emailRegex.test(value) ? "" : "Invalid email address"
-                                    );
+                                    setEmailError(emailRegex.test(value) ? "" : "Invalid email address");
                                 }}
                                 value={formData.email}
                                 placeholder="Email Address"
@@ -290,13 +301,12 @@ export default function Index() {
                                 mode="outlined"
                                 style={styles.input}
                                 onChangeText={(value) => {
-                                    if (value.length <= 11) {
-                                        handleChange("phoneNumber", value);
-                                    }
+                                    handleChange("phoneNumber", value);
                                 }}
                                 value={formData.phoneNumber}
                                 placeholder="Phone Number"
                                 keyboardType="numeric"
+                                maxLength={11}
                                 placeholderTextColor={COLORS.gray}
                                 theme={{ roundness: 30 }}
                             />
@@ -322,7 +332,7 @@ export default function Index() {
                                 }
                             />
                             {submitted && (formData.password == "" || formData.password.length < 6) ? (
-                                <Text style={{ color: "red" }}>required</Text>
+                                <Text style={{ color: "red" }}>Password should be at least 6 characters</Text>
                             ) : null}
                             <TextInput
                                 mode="outlined"
@@ -346,9 +356,7 @@ export default function Index() {
                                     />
                                 }
                             />
-                            {passwordError ? (
-                                <Text style={{ color: "red" }}>{passwordError}</Text>
-                            ) : null}
+                            {passwordError ? <Text style={{ color: "red" }}>{passwordError}</Text> : null}
                         </View>
                     )}
 

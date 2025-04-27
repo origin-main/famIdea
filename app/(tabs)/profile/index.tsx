@@ -6,10 +6,22 @@ import { useRouter } from "expo-router";
 import { Avatar } from "react-native-paper";
 import { supabase } from "@/utils/supabase";
 import { useAuth } from "@/context/AuthContext";
+import { useEffect, useState } from "react";
+import { getProfilePicture } from "@/utils/common";
 
 export default function Index() {
     const router = useRouter();
     const { user, setUser } = useAuth();
+    const [profilePicture, setProfilePicture] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (user?.profile?.profile_picture_url) {
+            const url = getProfilePicture(user?.profile?.profile_picture_url);
+            setProfilePicture(url);
+        } else {
+            setProfilePicture(null);
+        }
+    }, [user?.profile?.profile_picture_url]);
 
     const handleLogout = async () => {
         supabase.auth.signOut();
@@ -58,7 +70,11 @@ export default function Index() {
                             gap: 2,
                         }}
                     >
-                        <Avatar.Image size={90} source={require("@/assets/images/user-default.png")} />
+                        <Avatar.Image
+                            size={90}
+                            style={{ backgroundColor: "gray" }}
+                            source={profilePicture ? { uri: profilePicture } : require("@/assets/images/user-default.png")}
+                        />
                         {/* Name */}
                         <View
                             style={{
@@ -127,9 +143,12 @@ export default function Index() {
                     </Text>
 
                     {/* Child Information  */}
-                    <TouchableOpacity style={styles.button} onPress={() => {
-                        router.push("/profile/child-info");
-                    }}>
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => {
+                            router.push("/profile/child-info");
+                        }}
+                    >
                         <View
                             style={{
                                 width: 40,

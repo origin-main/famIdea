@@ -3,13 +3,24 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS } from "@/components/constants";
 import { Avatar, TextInput } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { router } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
+import { getProfilePicture } from "@/utils/common";
 
 export default function Index() {
     const { user } = useAuth();
     const [searchValue, setSearchValue] = useState("");
+    const [profilePicture, setProfilePicture] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (user?.profile?.profile_picture_url) {
+            const url = getProfilePicture(user?.profile?.profile_picture_url);
+            setProfilePicture(url);
+        } else {
+            setProfilePicture(null);
+        }
+    }, [user?.profile?.profile_picture_url]);
 
     const [sampleData, setSampleData] = useState([
         {
@@ -44,7 +55,11 @@ export default function Index() {
                     }}
                 >
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                        <Avatar.Image size={60} source={require("@/assets/images/user-default.png")} />
+                        <Avatar.Image
+                            size={60}
+                            style={{ backgroundColor: "white" }}
+                            source={profilePicture ? { uri: profilePicture } : require("@/assets/images/user-default.png")}
+                        />
                         {/* Name */}
                         <View
                             style={{
