@@ -31,6 +31,9 @@ export default function Index() {
                     alert("Sign in failed: " + error.message);
                 }
                 return;
+            } else if (data?.user?.user_metadata?.user_type !== "patient") {
+                alert("Account does not exist!");
+                return;
             }
 
             alert("Signed in successfully!");
@@ -60,16 +63,6 @@ export default function Index() {
                     source={require("../assets/images/logo.png")}
                 />
                 <Text style={styles.title}>FamIdea</Text>
-                {/* <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <Ionicons name="person-circle" size={32} color="#9CD9FC" />
-                  <TextInput
-                    style={styles.input}
-                    onChangeText={setUsername}
-                    value={username}
-                    placeholder="Username"
-                    placeholderTextColor={COLORS.gray}
-                  />
-                </View> */}
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
                     <Ionicons name="mail" size={32} color="#9CD9FC" />
 

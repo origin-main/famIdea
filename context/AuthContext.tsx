@@ -11,6 +11,16 @@ type Profile = {
     sex?: string;
     address?: string;
     profile_picture_url?: string;
+    emergency_contact: string;
+    emergency_contact_number: string;
+    estimated_due_date: Date | undefined;
+    previous_pregnancies: string;
+    deliveries: string;
+    complications: string;
+    medical_conditions: string;
+    allergies: string;
+    medications: string;
+    blood_type: string;
 };
 
 type User = {
@@ -31,50 +41,68 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Fetch the profile data based on userId
-    const fetchProfile = async (userId: string) => {
+    // Fetch the patient data based on userId
+    const fetchPatient = async (userId: string) => {
         const { data, error } = await supabase
-            .from("profiles")
-            .select("first_name, middle_name, last_name, contact_number, age, birthday, sex, address, profile_picture_url")
+            .from("patients")
+            .select(
+                `first_name, 
+                middle_name, 
+                last_name, 
+                contact_number, 
+                age, birthday, 
+                sex, 
+                address, 
+                profile_picture_url,
+                emergency_contact,
+                emergency_contact_number,
+                estimated_due_date,
+                previous_pregnancies,
+                deliveries,
+                complications,
+                medical_conditions,
+                allergies,
+                medications,
+                blood_type`
+            )
             .eq("id", userId)
             .single();
 
         if (error) {
-            console.error("Error fetching profile:", userId, error.message);
+            console.error("Error fetching patient:", userId, error.message);
             return null;
         }
         return data;
     };
 
     useEffect(() => {
-        let profileChannel: any;
+        let patientChannel: any;
 
         const initialize = async () => {
             const { data } = await supabase.auth.getSession();
             const currentUser = data?.session?.user ?? null;
 
             if (currentUser) {
-                const profile = await fetchProfile(currentUser.id);
+                const profile = await fetchPatient(currentUser.id);
                 setUser({
                     id: currentUser.id,
                     email: currentUser.email ?? "",
                     profile,
                 });
 
-                // Listen for changes in the current user's profile
-                profileChannel = supabase
-                    .channel("profile-updates")
+                // Listen for changes in the current user's patient
+                patientChannel = supabase
+                    .channel("patient-updates")
                     .on(
                         "postgres_changes",
                         {
                             event: "UPDATE",
                             schema: "public",
-                            table: "profiles",
+                            table: "patients",
                             filter: `id=eq.${currentUser.id}`,
                         },
                         async (payload) => {
                             console.log("Profile updated:", payload);
-
                             setUser((prevUser) => {
                                 if (!prevUser) return prevUser;
 
@@ -97,15 +125,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         initialize();
 
         // Listen for auth changes
-        const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+        const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
             const currentUser = session?.user ?? null;
+
             if (currentUser) {
-                const profile = await fetchProfile(currentUser.id);
-                setUser({
-                    id: currentUser.id,
-                    email: currentUser.email ?? "",
-                    profile,
-                });
+                setTimeout(async () => {
+                    try {
+                        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+                            const profile = await fetchPatient(currentUser.id);
+                            setUser({
+                                id: currentUser.id,
+                                email: currentUser.email ?? "",
+                                profile,
+                            });
+                        } else {
+                            setUser({
+                                id: currentUser.id,
+                                email: currentUser.email ?? "",
+                                profile: null,
+                            });
+                        }
+                    } catch (error: any) {
+                        console.error("Error fetching patient profile:", error.message);
+                        setUser({
+                            id: currentUser.id,
+                            email: currentUser.email ?? "",
+                            profile: null,
+                        });
+                    }
+                }, 0);
             } else {
                 setUser(null);
             }
@@ -114,7 +162,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Cleanup listeners on component unmount
         return () => {
             authListener?.subscription.unsubscribe();
-            profileChannel?.unsubscribe();
+            patientChannel?.unsubscribe();
         };
     }, []);
 

@@ -2,24 +2,119 @@ import { StyleSheet, Text, TouchableOpacity, View, ScrollView, Alert } from "rea
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { Avatar, Button, TextInput } from "react-native-paper";
+import { Button, TextInput } from "react-native-paper";
 import { useState } from "react";
+import { supabase } from "@/utils/supabase";
+import SessionExpiredModal from "@/components/ui/SessionExpiredModal";
 
 export default function Index() {
     const router = useRouter();
 
     const [passwordError, setPasswordError] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [showSessionExpired, setShowSessionExpired] = useState(false);
 
     const [formData, setFormData] = useState({
         email: "",
-        password: "", //TODO: Add password value from db
+        password: "",
         newPassword: "",
-        address: "",
+        confirmPassword: "",
     });
 
-    const handleSave = () => {
-        Alert.alert("Updated Patient Info", JSON.stringify(formData, null, 2));
+    const handleChangeEmail = async () => {
+        setLoading(true);
+        if (!formData.email) {
+            alert("Please enter an email address.");
+            setLoading(false);
+            return;
+        }
+
+        try {
+            const { error: updateError } = await supabase.auth.updateUser({
+                email: formData.email,
+            });
+
+            if (updateError) {
+                alert(updateError.message);
+                setLoading(false);
+                return;
+            }
+
+            Alert.alert(
+                "Email Change Request Sent",
+                "Please check your old and new email addresses to confirm the change.",
+                [
+                    {
+                        text: "OK",
+                        onPress: () => {
+                            setShowSessionExpired(true);
+                        },
+                    },
+                ],
+                { cancelable: false }
+            );
+        } catch (error: any) {
+            console.error("Error changing email:", error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleChangePassword = async () => {
+        setLoading(true);
+        if (!formData.password || !formData.newPassword || !formData.confirmPassword) {
+            alert("Please fill in all fields.");
+            setLoading(false);
+            return;
+        }
+
+        if (formData.newPassword.length < 6) {
+            alert("New password must be at least 6 characters long.");
+            setLoading(false);
+            return;
+        }
+
+        try {
+            const { error } = await supabase.rpc("confirm_current_user_password", {
+                current_plain_password: formData.password,
+            });
+
+            if (error) {
+                alert(error.message);
+                setLoading(false);
+                return;
+            }
+
+            // Update to new password
+            const { error: updateError } = await supabase.auth.updateUser({
+                password: formData.newPassword,
+            });
+
+            if (updateError) {
+                alert(updateError.message);
+                setLoading(false);
+                return;
+            }
+
+            Alert.alert(
+                "Success",
+                "Password changed successfully.",
+                [
+                    {
+                        text: "OK",
+                        onPress: () => {
+                            setShowSessionExpired(true);
+                        },
+                    },
+                ],
+                { cancelable: false }
+            );
+        } catch (error: any) {
+            console.error("Error changing password:", error.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -75,8 +170,11 @@ export default function Index() {
                             onChangeText={(value) => setFormData({ ...formData, email: value })}
                         ></TextInput>
                     </View>
+                    <Button mode="contained" loading={loading} onPress={handleChangeEmail} style={styles.saveButton}>
+                        Change email
+                    </Button>
 
-                    {/* Update password  */}
+                    {/* Update password */}
                     <View style={styles.infoRow}>
                         <Text style={styles.infoLabel}>Update password:</Text>
                         <TextInput
@@ -94,7 +192,7 @@ export default function Index() {
                                     onPress={() => setShowPassword((prev) => !prev)}
                                 />
                             }
-                        ></TextInput>
+                        />
                     </View>
 
                     <View style={styles.infoRow}>
@@ -113,19 +211,20 @@ export default function Index() {
                                     onPress={() => setShowPassword((prev) => !prev)}
                                 />
                             }
-                        ></TextInput>
+                        />
                     </View>
 
                     <View style={styles.infoRow}>
                         <TextInput
                             style={styles.infoText}
                             mode="outlined"
-                            placeholder="Confirm password"
+                            placeholder="Confirm new password"
                             dense={true}
                             secureTextEntry={!showPassword}
-                            value={formData.password}
+                            value={formData.confirmPassword}
                             onChangeText={(value) => {
-                                if (value !== formData.password) {
+                                setFormData({ ...formData, confirmPassword: value });
+                                if (value !== formData.newPassword) {
                                     setPasswordError("Passwords do not match");
                                 } else {
                                     setPasswordError("");
@@ -138,28 +237,15 @@ export default function Index() {
                                     onPress={() => setShowPassword((prev) => !prev)}
                                 />
                             }
-                        ></TextInput>
-                        {passwordError ? (
-                            <Text style={{ color: "red" }}>{passwordError}</Text>
-                        ) : null}
-                    </View>
-
-                    {/* Address  */}
-                    <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Address:</Text>
-                        <TextInput
-                            style={styles.infoText}
-                            mode="outlined"
-                            dense={true}
-                            value={formData.address}
-                            onChangeText={(value) => setFormData({ ...formData, address: value })}
-                        ></TextInput>
+                        />
+                        {passwordError && <Text style={{ color: "red" }}>{passwordError}</Text>}
                     </View>
                 </View>
-                <Button mode="contained" onPress={handleSave} style={styles.saveButton}>
-                    Save
+                <Button mode="contained" loading={loading} onPress={handleChangePassword} style={styles.saveButton}>
+                    Change password
                 </Button>
             </ScrollView>
+            <SessionExpiredModal visible={showSessionExpired} setVisible={setShowSessionExpired} />
         </SafeAreaView>
     );
 }
@@ -191,7 +277,7 @@ const styles = StyleSheet.create({
         width: "40%",
         fontSize: 12,
         fontWeight: "bold",
-        marginTop: 10
+        marginTop: 10,
     },
     infoText: {
         width: "100%",

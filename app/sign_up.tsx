@@ -84,6 +84,11 @@ export default function Index() {
                 const { data: authData, error: authError } = await supabase.auth.signUp({
                     email: formData.email,
                     password: formData.password,
+                    options: {
+                        data: {
+                            user_type: "patient",
+                        },
+                    },
                 });
 
                 if (authError) {
@@ -97,10 +102,9 @@ export default function Index() {
                 }
 
                 // Insert into profiles
-                const { error: profileError } = await supabase.from("profiles").insert([
+                const { error: patientError } = await supabase.from("patients").insert([
                     {
                         id: userId,
-                        role: "patient",
                         first_name: formData.firstName,
                         middle_name: formData.middleName || null,
                         last_name: formData.lastName,
@@ -112,19 +116,8 @@ export default function Index() {
                     },
                 ]);
 
-                if (profileError) {
-                    throw new Error(`Insert profile error: ${profileError.message}`);
-                }
-
-                // Insert into patient_info
-                const { error: patientInfoError } = await supabase.from("patient_info").insert([
-                    {
-                        id: userId,
-                    },
-                ]);
-
-                if (patientInfoError) {
-                    throw new Error(`Insert patient_info error: ${patientInfoError.message}`);
+                if (patientError) {
+                    throw new Error(`Insert profile error: ${patientError.message}`);
                 }
 
                 // Insert into child_info

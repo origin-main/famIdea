@@ -71,56 +71,25 @@ export default function Index() {
         }
     }, [user]);
 
-    const getInitialFormData = async () => {
-        setLoading(true);
-        try {
-            const { data: patientInfo, error } = await supabase
-                .from("patient_info")
-                .select(
-                    `
-                    emergency_contact,
-                    emergency_contact_number,
-                    estimated_due_date,
-                    previous_pregnancies,
-                    deliveries,
-                    complications,
-                    medical_conditions,
-                    allergies,
-                    medications,
-                    blood_type
-                `
-                )
-                .eq("id", user?.id)
-                .single();
-
-            if (error) {
-                throw new Error(error.message);
-            }
-
-            setFormData({
-                firstName: user?.profile?.first_name || "",
-                middleName: user?.profile?.middle_name || "",
-                lastName: user?.profile?.last_name || "",
-                dateOfBirth: user?.profile?.birthday ? new Date(user?.profile?.birthday) : undefined,
-                address: user?.profile?.address || "",
-                phoneNumber: user?.profile?.contact_number || "",
-                emergencyContact: patientInfo?.emergency_contact || "",
-                emergencyContactNumber: patientInfo?.emergency_contact_number || "",
-                estimatedDueDate: patientInfo?.estimated_due_date ? new Date(patientInfo?.estimated_due_date) : undefined,
-                previousPregnancies: patientInfo?.previous_pregnancies || "",
-                deliveries: patientInfo?.deliveries || "",
-                complications: patientInfo?.complications || "",
-                medicalConditions: patientInfo?.medical_conditions || "",
-                allergies: patientInfo?.allergies || "",
-                medications: patientInfo?.medications || "",
-                bloodType: patientInfo?.blood_type || "",
-            });
-        } catch (error: any) {
-            console.error("Failed to fetch initial form data:", error.message);
-            throw error;
-        } finally {
-            setLoading(false);
-        }
+    const getInitialFormData = () => {
+        setFormData({
+            firstName: user?.profile?.first_name || "",
+            middleName: user?.profile?.middle_name || "",
+            lastName: user?.profile?.last_name || "",
+            dateOfBirth: user?.profile?.birthday ? new Date(user?.profile?.birthday) : undefined,
+            address: user?.profile?.address || "",
+            phoneNumber: user?.profile?.contact_number || "",
+            emergencyContact: user?.profile?.emergency_contact || "",
+            emergencyContactNumber: user?.profile?.emergency_contact_number || "",
+            estimatedDueDate: user?.profile?.estimated_due_date ? new Date(user?.profile?.estimated_due_date) : undefined,
+            previousPregnancies: user?.profile?.previous_pregnancies || "",
+            deliveries: user?.profile?.deliveries || "",
+            complications: user?.profile?.complications || "",
+            medicalConditions: user?.profile?.medical_conditions || "",
+            allergies: user?.profile?.allergies || "",
+            medications: user?.profile?.medications || "",
+            bloodType: user?.profile?.blood_type || "",
+        });
     };
 
     const pickImage = async () => {
@@ -188,6 +157,7 @@ export default function Index() {
             // 1. Upload new image if there is one
             let uploadedImagePath: string | undefined;
             if (newImage) {
+                console.log(1);
                 const response = await fetch(newImage.uri);
                 const arrayBuffer = await response.arrayBuffer();
                 const bytes = new Uint8Array(arrayBuffer);
@@ -217,6 +187,7 @@ export default function Index() {
             }
             // 1.1 Delete photo from db and storage if marked for deletion
             else if (markedForDeletion && user?.profile?.profile_picture_url) {
+                console.log("1.1");
                 const imagePath = user.profile.profile_picture_url;
 
                 const { error: storageError } = await supabase.storage.from("profile-pictures").remove([imagePath]);
@@ -225,7 +196,7 @@ export default function Index() {
                     throw storageError;
                 }
 
-                const { error: dbError } = await supabase.from("profiles").update({ profile_picture_url: null }).eq("id", user.id);
+                const { error: dbError } = await supabase.from("patients").update({ profile_picture_url: null }).eq("id", user.id);
 
                 if (dbError) {
                     throw dbError;
@@ -234,9 +205,9 @@ export default function Index() {
                 console.log("Profile picture deleted successfully.");
             }
 
-            // 2. Update profiles table
-            const { error: profileError } = await supabase
-                .from("profiles")
+            // 2. Update patients table
+            const { error: patientError } = await supabase
+                .from("patients")
                 .update({
                     first_name: formData.firstName,
                     middle_name: formData.middleName,
@@ -244,18 +215,6 @@ export default function Index() {
                     birthday: formatDateToYMD(formData.dateOfBirth),
                     address: formData.address,
                     contact_number: formData.phoneNumber,
-                    ...(uploadedImagePath ? { profile_picture_url: uploadedImagePath } : {}), // Only update image if uploaded
-                })
-                .eq("id", user?.id);
-
-            if (profileError) {
-                throw new Error(`Failed to update profile: ${profileError?.message}`);
-            }
-
-            // 3. Update patient_info table
-            const { error: patientError } = await supabase
-                .from("patient_info")
-                .update({
                     emergency_contact: formData.emergencyContact,
                     emergency_contact_number: formData.emergencyContactNumber,
                     estimated_due_date: formData.estimatedDueDate ? formatDateToYMD(formData.estimatedDueDate) : null,
@@ -266,11 +225,12 @@ export default function Index() {
                     allergies: formData.allergies,
                     medications: formData.medications,
                     blood_type: formData.bloodType,
+                    ...(uploadedImagePath ? { profile_picture_url: uploadedImagePath } : {}), // Only update image if uploaded
                 })
                 .eq("id", user?.id);
 
             if (patientError) {
-                throw new Error(`Failed to update patient info: ${patientError?.message}`);
+                throw new Error(`Failed to update patient: ${patientError?.message}`);
             }
 
             alert("Information saved successfully!");
