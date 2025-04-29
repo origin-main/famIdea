@@ -37,6 +37,7 @@ export default function TabLayout() {
                 name="home"
                 options={{
                     title: "Home",
+                    href: "/home",
                     tabBarIcon: () => <Ionicons size={28} name="home" color={"white"} />,
                 }}
             />
@@ -44,13 +45,15 @@ export default function TabLayout() {
                 name="messaging"
                 options={{
                     title: "Messaging",
+                    href: "/messaging",
                     tabBarIcon: () => <Ionicons size={28} name="chatbox-ellipses" color={"white"} />,
                 }}
             />
             <Tabs.Screen
-                name="appointment/appointment"
+                name="appointment/index"
                 options={{
                     title: "Appointment",
+                    href: "/appointment",
                     tabBarIcon: () => <Ionicons size={28} name="calendar" color={"white"} />,
                 }}
             />
@@ -58,6 +61,7 @@ export default function TabLayout() {
                 name="profile"
                 options={{
                     title: "Profile",
+                    href: "/profile",
                     tabBarIcon: () => <Ionicons size={28} name="person-circle-outline" color={"white"} />,
                 }}
             />

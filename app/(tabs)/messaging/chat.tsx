@@ -1,72 +1,129 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, StyleSheet, Text, TextInput, TouchableOpacity, ImageBackground, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { COLORS } from "@/components/constants";
 import { router, useLocalSearchParams } from "expo-router";
+import { supabase } from "@/utils/supabase";
+import { useAuth } from "@/context/AuthContext";
 
-// Simulated current user ID and birth center ID
-const USER = { id: "current-user-id" };
-const BIRTH_CENTER_ID = "birth-center-id";
-
-// Define the Message type
 interface Message {
     id: number;
-    sender_id: string;
-    reciever_id: string;
+    senderId: string;
+    receiverId: string;
     content: string;
-    sent_at: string;
+    sentAt: string;
 }
 
-// Static sample messages (mock data based on the table definition)
-const sampleMessages: Message[] = [
-    {
-        id: 1,
-        sender_id: BIRTH_CENTER_ID,
-        reciever_id: USER.id,
-        content: "Hello! How can we assist you today?",
-        sent_at: new Date().toISOString(),
-    },
-    {
-        id: 2,
-        sender_id: USER.id,
-        reciever_id: BIRTH_CENTER_ID,
-        content: "I'm looking for more information about your services.",
-        sent_at: new Date().toISOString(),
-    },
-    {
-        id: 3,
-        sender_id: BIRTH_CENTER_ID,
-        reciever_id: USER.id,
-        content: "Sure! We offer a variety of maternity services. Would you like to schedule a consultation?",
-        sent_at: new Date().toISOString(),
-    },
-];
-
 const ChatRoom = () => {
-    const { chatId } = useLocalSearchParams(); // This will receive the chatId from navigation params
+    const { birthCenterId, name } = useLocalSearchParams();
+    const { user } = useAuth();
+    const [messages, setMessages] = useState<Message[]>([]);
     const [message, setMessage] = useState("");
-    const [messages, setMessages] = useState<Message[]>(sampleMessages);
+    const [loading, setLoading] = useState(true);
 
-    const handleSendMessage = () => {
-        if (message.trim()) {
-            const newMessage: Message = {
-                id: messages.length + 1,
-                sender_id: USER.id,
-                reciever_id: BIRTH_CENTER_ID,
-                content: message,
-                sent_at: new Date().toISOString(),
-            };
+    useEffect(() => {
+        markMessagesAsRead();
+    }, []);
 
-            setMessages([...messages, newMessage]); // Add the new message to the list
-            setMessage(""); // Clear the input field after sending
+    useEffect(() => {
+        if (!user?.id || !birthCenterId) return;
+
+        fetchMessages();
+
+        const channel = supabase
+            .channel("chat-" + user.id + "-" + birthCenterId)
+            .on(
+                "postgres_changes",
+                {
+                    event: "INSERT",
+                    schema: "public",
+                    table: "messages",
+                    filter: `patient_id=eq.${user.id}`,
+                },
+                (payload) => {
+                    const msg = payload.new;
+
+                    if (msg.birth_center_id === birthCenterId) {
+                        setMessages((prev) => [
+                            ...prev,
+                            {
+                                id: msg.id,
+                                senderId: msg.sender_id,
+                                receiverId: msg.receiver_id,
+                                content: msg.content,
+                                sentAt: msg.created_at,
+                            },
+                        ]);
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [user?.id, birthCenterId]);
+
+    const markMessagesAsRead = async () => {
+        await supabase
+            .from("messages")
+            .update({ read_at: new Date().toISOString() })
+            .eq("receiver_id", user?.id)
+            .eq("sender_id", birthCenterId)
+            .eq("patient_id", user?.id)
+            .eq("birth_center_id", birthCenterId)
+            .is("read_at", null);
+    };
+
+    const fetchMessages = async () => {
+        setLoading(true);
+        const { data, error } = await supabase
+            .from("messages")
+            .select("id, content, created_at, sender_id, receiver_id")
+            .eq("patient_id", user?.id)
+            .eq("birth_center_id", birthCenterId)
+            .order("created_at", { ascending: false });
+
+        if (error) {
+            console.error("Failed to fetch messages:", error.message);
+        } else {
+            const formatted = data.map((msg) => ({
+                id: msg.id,
+                senderId: msg.sender_id,
+                receiverId: msg.receiver_id,
+                content: msg.content,
+                sentAt: msg.created_at,
+            }));
+            setMessages(formatted);
+        }
+
+        setLoading(false);
+    };
+
+    const handleSendMessage = async () => {
+        if (!message.trim()) return;
+
+        const { error } = await supabase.from("messages").insert([
+            {
+                sender_id: user?.id,
+                receiver_id: birthCenterId,
+                content: message.trim(),
+                birth_center_id: birthCenterId,
+                patient_id: user?.id,
+            },
+        ]);
+
+        if (error) {
+            console.error("Error sending message:", error.message);
+        } else {
+            setMessage("");
         }
     };
 
-    // Render each message based on sender
     const renderMessage = ({ item }: { item: Message }) => {
-        const messageTime = new Date(item.sent_at);
-        const formattedTime = messageTime.toLocaleTimeString([], {
+        const isMine = item.senderId === user?.id;
+        const formattedTime = new Date(item.sentAt).toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
             hour12: true,
@@ -74,36 +131,46 @@ const ChatRoom = () => {
 
         return (
             <View style={{ marginBottom: 10 }}>
-                <View style={[styles.messageContainer, item.sender_id === USER.id ? styles.myMessage : styles.theirMessage]}>
+                <View style={[styles.messageContainer, isMine ? styles.myMessage : styles.theirMessage]}>
                     <Text style={styles.messageText}>{item.content}</Text>
                 </View>
-                <Text style={[styles.timestamp, { alignSelf: item.sender_id === USER.id ? "flex-end" : "flex-start" }]}>{formattedTime}</Text>
+                <Text style={[styles.timestamp, { alignSelf: isMine ? "flex-end" : "flex-start" }]}>{formattedTime}</Text>
             </View>
         );
     };
 
     return (
-        <ImageBackground
-            source={require("@/assets/images/background.png")}
-            style={{ flex: 1, justifyContent: "flex-start", backgroundColor: COLORS.white }}
-            resizeMode="cover"
-        >
+        <ImageBackground source={require("@/assets/images/background.png")} style={{ flex: 1, justifyContent: "flex-start" }} resizeMode="cover">
             <SafeAreaView style={{ flex: 1, justifyContent: "space-between" }}>
                 <View style={styles.titleBar}>
-                    <View style={{ position: "absolute", left: 20 }}>
-                        <TouchableOpacity onPress={() => router.back()}>
-                            <Ionicons name="chevron-back" size={24} color="black" />
-                        </TouchableOpacity>
-                    </View>
-                    <Text style={styles.title}>Margarita Birthing Center</Text>
+                    <TouchableOpacity onPress={() => router.back()} style={{ position: "absolute", left: 20 }}>
+                        <Ionicons name="chevron-back" size={24} color="black" />
+                    </TouchableOpacity>
+                    <Text style={styles.title}>{name || "Chat"}</Text>
                 </View>
 
                 <View style={{ padding: 10, flex: 1 }}>
-                    {/* Displaying the messages */}
-                    <FlatList data={messages} renderItem={renderMessage} keyExtractor={(item) => item.id.toString()} />
+                    {messages.length === 0 && !loading ? (
+                        <Text
+                            style={{
+                                textAlign: "center",
+                                color: "gray",
+                                marginTop: 20,
+                            }}
+                        >
+                            No messages yet. Send a message below.
+                        </Text>
+                    ) : (
+                        <FlatList
+                            showsVerticalScrollIndicator={false}
+                            data={messages}
+                            renderItem={renderMessage}
+                            keyExtractor={(item) => item.id.toString()}
+                            inverted
+                        />
+                    )}
                 </View>
 
-                {/* Message Input Area */}
                 <View style={{ flexDirection: "row", alignItems: "center", padding: 10 }}>
                     <TextInput style={styles.input} placeholder="Type a message..." value={message} onChangeText={setMessage} multiline />
                     <TouchableOpacity onPress={handleSendMessage} style={styles.sendButton}>
