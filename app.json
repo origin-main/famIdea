@@ -33,6 +33,12 @@
                     "resizeMode": "contain",
                     "backgroundColor": "#ffffff"
                 }
+            ],
+            [
+                "expo-location",
+                {
+                    "locationAlwaysAndWhenInUsePermission": "Allow Famidea to use your location."
+                }
             ]
         ],
         "experiments": {

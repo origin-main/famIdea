@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView } from "react-native";
+import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS } from "@/components/constants";
 import { Avatar, TextInput } from "react-native-paper";
@@ -7,12 +7,33 @@ import { useEffect, useState } from "react";
 import { router } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
 import { getProfilePicture } from "@/utils/common";
+import * as Location from "expo-location";
+import { supabase } from "@/utils/supabase";
+import { getDistance, orderByDistance } from "geolib";
+
+type BirthCenter = {
+    id: string;
+    name: string;
+    address: string;
+    contactNumber: string;
+    description?: string;
+    latitude?: string;
+    longitude?: string;
+    pictureUrl: string;
+    distance?: number;
+};
+
+const DISTANCE_THRESHOLD_KM = 5;
+const DISTANCE_THRESHOLD_METERS = DISTANCE_THRESHOLD_KM * 1000;
 
 export default function Index() {
     const { user } = useAuth();
-    const [searchValue, setSearchValue] = useState("");
     const [profilePicture, setProfilePicture] = useState<string | null>(null);
+    const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+    const [nearbyBirthCenters, setNearbyBirthCenters] = useState<BirthCenter[]>([]);
+    const [loading, setLoading] = useState(false);
 
+    // Set user's profile picture
     useEffect(() => {
         if (user?.profile?.profile_picture_url) {
             const url = getProfilePicture(user?.profile?.profile_picture_url);
@@ -22,23 +43,82 @@ export default function Index() {
         }
     }, [user?.profile?.profile_picture_url]);
 
-    const [sampleData, setSampleData] = useState([
-        {
-            name: "Margarita birthing center",
-            rating: 4.5,
-            image: require("@/assets/images/service-icons/health-clinic.png"),
-        },
-        {
-            name: "Margarita birthing center",
-            rating: 4.5,
-            image: require("@/assets/images/service-icons/health-clinic.png"),
-        },
-        {
-            name: "Margarita birthing center",
-            rating: 4.5,
-            image: require("@/assets/images/service-icons/health-clinic.png"),
-        },
-    ]);
+    // Get user's current location
+    useEffect(() => {
+        (async () => {
+            let { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== "granted") {
+                console.log("Permission to access location was denied");
+                return;
+            }
+
+            let location = await Location.getCurrentPositionAsync({});
+            setLocation({ latitude: location.coords.latitude, longitude: location.coords.longitude });
+        })();
+    }, []);
+
+    useEffect(() => {
+        fetchNearbyBirthCenters();
+    }, [location]);
+
+    // Get nearby birth centers
+    const fetchNearbyBirthCenters = async () => {
+        if (!location) return;
+
+        setLoading(true);
+        const { data, error } = await supabase
+            .from("birth_centers")
+            .select("id, name, address, contact_number, description, latitude, longitude, picture_url")
+            .eq("status", "approved");
+
+        if (error) {
+            console.error("Failed to fetch birth centers:", error.message);
+            setLoading(false);
+            return;
+        }
+
+        const birthCenters = data
+            .filter((center) => center.latitude != null && center.longitude != null)
+            .map((center) => ({
+                id: center.id,
+                name: center.name,
+                address: center.address,
+                contactNumber: center.contact_number,
+                description: center.description,
+                latitude: center.latitude,
+                longitude: center.longitude,
+                pictureUrl: center.picture_url,
+            }));
+
+        const nearbyCenters = birthCenters
+            .map((center) => {
+                const distance = getDistance(location!, {
+                    latitude: center.latitude,
+                    longitude: center.longitude,
+                });
+
+                return {
+                    ...center,
+                    distance,
+                };
+            })
+            .filter((center) => center.distance <= DISTANCE_THRESHOLD_METERS)
+            .sort((a, b) => a.distance - b.distance);
+
+        setNearbyBirthCenters(nearbyCenters);
+
+        setLoading(false);
+    };
+
+    const handleBirthCenterClick = (centerId: string) => {
+        router.navigate({
+            pathname: "/home/clinic-page",
+            params: { id: centerId },
+        });
+    };
+
+    // Get random static rating
+    const getRating = () => (Math.random() * 2 + 3).toFixed(1);
 
     return (
         <View>
@@ -229,43 +309,51 @@ export default function Index() {
                     </View>
 
                     <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                            {sampleData.map((data, index) => (
-                                <TouchableOpacity
-                                    key={index}
-                                    style={{
-                                        width: 150,
-                                        height: 170,
-                                        backgroundColor: COLORS.white,
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        borderRadius: 5,
-                                        marginRight: 10,
-                                        paddingVertical: 10,
-                                    }}
-                                    onPress={() => {
-                                        router.push("/home/clinic-page");
-                                    }}
-                                >
-                                    <Image
-                                        style={{
-                                            width: "90%",
-                                            height: "80%",
-                                            backgroundColor: COLORS.lightBlue,
-                                            objectFit: "fill",
-                                            margin: 5,
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchNearbyBirthCenters} />}
+                        >
+                            {nearbyBirthCenters.length > 0 ? (
+                                nearbyBirthCenters.map((data, index) => (
+                                    <TouchableOpacity
+                                        key={index}
+                                        style={styles.clinicCard}
+                                        onPress={() => {
+                                            handleBirthCenterClick(data.id);
                                         }}
-                                        source={require("@/assets/images/service-icons/health-clinic.png")}
-                                    />
-                                    <View style={{ alignItems: "center", gap: 3 }}>
-                                        <Text style={{ fontSize: 12, fontWeight: "bold" }}>Margarita birthing center</Text>
-                                        <View style={{ flexDirection: "row", gap: 5 }}>
-                                            <Ionicons size={15} name="star-half" color={"black"} />
-                                            <Text style={{ fontSize: 12, fontWeight: "bold" }}>4.5</Text>
+                                    >
+                                        <Image
+                                            style={{
+                                                width: "90%",
+                                                height: "70%",
+                                                backgroundColor: COLORS.lightBlue,
+                                                objectFit: "fill",
+                                                margin: 5,
+                                            }}
+                                            source={
+                                                data.pictureUrl
+                                                    ? { uri: data.pictureUrl }
+                                                    : require("@/assets/images/service-icons/health-clinic.png")
+                                            }
+                                        />
+                                        <View style={{ alignItems: "center", gap: 3 }}>
+                                            <Text style={{ fontSize: 12, fontWeight: "bold" }} numberOfLines={1}>
+                                                {data.name}
+                                            </Text>
+                                            <View style={{ flexDirection: "row", gap: 5, alignSelf: "flex-start", alignItems: "center" }}>
+                                                <Ionicons size={15} name="star" color={"gold"} />
+                                                <Text style={{ fontSize: 12 }}>{getRating()}</Text>
+                                            </View>
+                                            <Text style={{ fontSize: 11, color: "grey", alignSelf: "flex-start" }}>{`${(
+                                                data.distance! / 1000
+                                            ).toFixed(1)} km away`}</Text>
                                         </View>
-                                    </View>
-                                </TouchableOpacity>
-                            ))}
+                                    </TouchableOpacity>
+                                ))
+                            ) : (
+                                <Text style={{ fontSize: 12, fontWeight: "bold" }}>No Birth Centers found</Text>
+                            )}
                         </ScrollView>
                     </View>
                 </View>
@@ -287,6 +375,16 @@ const styles = StyleSheet.create({
         backgroundColor: "#0082a6",
         alignItems: "flex-start",
         padding: 10,
+    },
+    clinicCard: {
+        width: 150,
+        height: 170,
+        backgroundColor: COLORS.white,
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: 5,
+        marginRight: 10,
+        paddingVertical: 15,
     },
     button: {
         backgroundColor: COLORS.lightBlue,

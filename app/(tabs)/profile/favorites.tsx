@@ -1,120 +1,149 @@
-import React from "react";
-import { View, StyleSheet, Image, Text, ImageBackground } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, StyleSheet, Image, Text, ImageBackground, FlatList, TouchableOpacity, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { COLORS } from "@/components/constants";
-import { Card, IconButton } from "react-native-paper";
+import { ActivityIndicator, Card, IconButton } from "react-native-paper";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/utils/supabase";
+import { ScrollView } from "react-native-reanimated/lib/typescript/Animated";
+import { set } from "date-fns";
+import { router } from "expo-router";
+
+type BirthCenter = {
+    id: string;
+    name: string;
+    address: string;
+    pictureUrl: string;
+};
 
 export default function Index() {
-  const favorites = [
-    {
-      name: "Margarita Birthing Center III",
-      address: "96 - J Gorordo Ave, Cebu City, 6000 Cebu",
-      rating: 4.5
-    },
-  ];
+    const { user } = useAuth();
+    const [favorites, setFavorites] = useState<BirthCenter[]>([]);
+    const [loading, setLoading] = useState(false);
 
-  return (
-    <ImageBackground
-      source={require("@/assets/images/background.png")} // Correct way to set a background image
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        backgroundColor: COLORS.white,
-        alignItems: "center",
-      }}
-      resizeMode="cover"
-    >
-      <SafeAreaView style={{ alignItems: "center" }}>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            width: "90%",
-            // backgroundColor: "gray",
-          }}
-        >
-          <IconButton
-            size={24}
-            icon="heart-plus"
-            mode="outlined"
-            iconColor={"black"}
-            onPress={() => {
-              alert("create msg");
+    useEffect(() => {
+        fetchFavorites();
+    }, [user]);
+
+    const fetchFavorites = async () => {
+        if (!user) return;
+
+        setLoading(true);
+
+        const { data, error } = await supabase
+            .from("preferred_centers")
+            .select("birth_center:birth_centers (id, name, address, picture_url)")
+            .eq("patient_id", user.id);
+
+        console.log(data);
+
+        if (error) {
+            console.error("Error fetching preferred birth centers:", error);
+        } else {
+            // @ts-ignore
+            const birthCenters = data?.map((item: any) => ({
+                id: item.birth_center.id,
+                name: item.birth_center.name,
+                address: item.birth_center.address,
+                pictureUrl: item.birth_center.picture_url,
+            }));
+
+            setFavorites(birthCenters);
+        }
+
+        setLoading(false);
+    };
+
+    const handleBirthCenterClick = (centerId: string) => {
+        router.push({
+            pathname: "/home/clinic-page",
+            params: { id: centerId },
+        });
+    };
+
+    // Static random rating
+    const getRating = () => {
+        return (Math.random() * 2 + 3).toFixed(1);
+    };
+
+    return (
+        <ImageBackground
+            source={require("@/assets/images/background.png")}
+            style={{
+                flex: 1,
+                justifyContent: "center",
+                backgroundColor: COLORS.white,
+                alignItems: "center",
             }}
-          />
-          <Text style={{ fontSize: 27 }}>Favorites</Text>
-        </View>
-        <View
-          style={{
-            flexDirection: "column",
-            alignItems: "center",
-            width: "90%",
-            height: "85%",
-            margin: 10,
-            gap: 10,
-          }}
+            resizeMode="cover"
         >
-          {favorites.map((data, index) => (
-            <Card
-              key={index}
-              style={{
-                width: 350,
-              }}
-              onPress={() => {
-                alert("clicked");
-              }}
-            >
-              <Card.Content style={{ width: "100%" }}>
-                <View style={{ flexDirection: "row" }}>
-                  <Image
+            <SafeAreaView style={{ width: "100%", height: "100%", padding: 20 }}>
+                <View
                     style={{
-                      width: 50,
-                      height: 50,
-                      backgroundColor: COLORS.lightBlue,
-                      objectFit: "fill",
-                      marginRight: 20,
-                      borderRadius: 20,
+                        alignItems: "flex-end",
+                        width: "100%",
+                        marginTop: 10,
+                        marginBottom: 30,
                     }}
-                    source={require("@/assets/images/service-icons/health-clinic.png")}
-                  />
-                  <View style={{ flexDirection: "column", gap: 5 }}>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        gap: 3,
-                      }}
-                    >
-                      <Text style={{ fontWeight: "bold" }}>
-                        {data.name}
-                      </Text>
-                    </View>
-                    <View style={{ flexDirection: "row" }}>
-                      <Text
-                        style={{
-                          flexShrink: 1,
-                          flexWrap: "wrap",
-                          width: "70%",
-                        }}
-                      >
-                        {data.address}
-                      </Text>
-                      <Text
-                        style={{
-                          alignSelf: "flex-end",
-                        }}
-                      >
-                        {data.rating} <Ionicons name="star" size={15} color={COLORS.lightBlue} />
-                      </Text>
-                    </View>
-                  </View>
+                >
+                    <Text style={{ fontSize: 27 }}>Favorites</Text>
                 </View>
-              </Card.Content>
-            </Card>
-          ))}
-        </View>
-      </SafeAreaView>
-    </ImageBackground>
-  );
+                {loading ? (
+                    <ActivityIndicator style={{ flex: 1 }} color={COLORS.lightBlue} />
+                ) : (
+                    <FlatList
+                        data={favorites}
+                        keyExtractor={(item, index) => index.toString()}
+                        showsVerticalScrollIndicator={false}
+                        refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchFavorites} />}
+                        renderItem={({ item }) => (
+                            <TouchableOpacity onPress={() => handleBirthCenterClick(item.id)} activeOpacity={0.8}>
+                                <Card style={{ width: "100%", marginBottom: 10 }}>
+                                    <Card.Content style={{ width: "100%" }}>
+                                        <View style={{ flexDirection: "row" }}>
+                                            <Image
+                                                style={{
+                                                    width: 60,
+                                                    height: 60,
+                                                    backgroundColor: COLORS.lightBlue,
+                                                    objectFit: "fill",
+                                                    marginRight: 20,
+                                                    borderRadius: 50,
+                                                }}
+                                                source={
+                                                    item.pictureUrl
+                                                        ? { uri: item.pictureUrl }
+                                                        : require("@/assets/images/service-icons/health-clinic.png")
+                                                }
+                                            />
+                                            <View style={{ flexDirection: "column", gap: 5 }}>
+                                                <View style={{ flexDirection: "row", gap: 3 }}>
+                                                    <Text style={{ fontWeight: "bold" }}>{item.name}</Text>
+                                                </View>
+                                                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                                                    <Text
+                                                        style={{
+                                                            flexShrink: 1,
+                                                            flexWrap: "wrap",
+                                                            width: "70%",
+                                                        }}
+                                                    >
+                                                        {item.address}
+                                                    </Text>
+                                                    <Text style={{ alignSelf: "flex-end" }}>
+                                                        {getRating()} <Ionicons name="star" size={15} color="gold" />
+                                                    </Text>
+                                                </View>
+                                            </View>
+                                        </View>
+                                    </Card.Content>
+                                </Card>
+                            </TouchableOpacity>
+                        )}
+                    />
+                )}
+            </SafeAreaView>
+        </ImageBackground>
+    );
 }

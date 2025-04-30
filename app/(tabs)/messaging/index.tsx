@@ -158,35 +158,6 @@ export default function Index() {
 }
 
 const styles = StyleSheet.create({
-    input: {
-        height: 40,
-        margin: 12,
-        borderWidth: 1,
-        padding: 10,
-        width: 250,
-        borderRadius: 20,
-    },
-    title: {
-        fontSize: 32,
-        fontFamily: "Roboto",
-        fontWeight: "bold",
-        margin: 20,
-    },
-    button: {
-        backgroundColor: COLORS.lightBlue,
-        paddingVertical: 12,
-        paddingHorizontal: 20,
-        borderRadius: 30,
-        alignItems: "center",
-        justifyContent: "center",
-        marginTop: 20,
-        width: 200,
-    },
-    buttonText: {
-        color: "black",
-        fontSize: 18,
-        fontWeight: "bold",
-    },
     badgeCount: {
         position: "absolute",
         top: 5,

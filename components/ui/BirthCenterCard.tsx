@@ -15,6 +15,7 @@ type BirthCenter = {
     latitude?: string;
     longitude?: string;
     pictureUrl: string;
+    rating?: number;
 };
 
 type Props = {
@@ -82,6 +83,9 @@ const BirthCenterCard = ({ data, onPress, disabled }: Props) => {
         setSelected((prev) => !prev);
     };
 
+    // Get random static rating
+    const getRating = () => (Math.random() * 2 + 3).toFixed(1);
+
     return (
         <TouchableOpacity onPress={onPress} style={styles.container} disabled={disabled}>
             <IconButton
@@ -122,8 +126,8 @@ const BirthCenterCard = ({ data, onPress, disabled }: Props) => {
                     </Text>
 
                     <View style={styles.rating}>
-                        <Ionicons size={15} name="star-half" color="black" />
-                        <Text style={styles.ratingText}>4.5</Text>
+                        <Ionicons size={15} name="star" color="gold" />
+                        <Text style={styles.ratingText}>{data.rating || getRating()}</Text>
                     </View>
                 </View>
             </View>
