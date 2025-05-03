@@ -68,6 +68,87 @@ export default function Index() {
         });
     };
 
+    //sample Data
+    const SERVICES = [
+        {
+          title: "Family Planning",
+          icon: require("@/assets/images/service-icons/family.png"),
+          needsModal: false,
+        },
+        {
+          title: "Newborn Package",
+          icon: require("@/assets/images/service-icons/mother.png"),
+          needsModal: false,
+        },
+        {
+          title: "Maternal Delivery Package",
+          icon: require("@/assets/images/service-icons/pregnant.png"),
+          needsModal: true,
+        },
+        {
+          title: "Prenatal and Postpartum Care",
+          icon: require("@/assets/images/service-icons/pediatrics.png"),
+          needsModal: true,
+        },
+        {
+          title: "Newborn Screening Test",
+          icon: require("@/assets/images/service-icons/baby.png"),
+          needsModal: false,
+        },
+      ];
+
+    // Function to render service rows
+    const renderServiceRows = () => {
+        const rows = [];
+        const itemsPerRow = 3;
+      
+        for (let i = 0; i < SERVICES.length; i += itemsPerRow) {
+          const rowItems = SERVICES.slice(i, i + itemsPerRow);
+          rows.push(
+            <View
+              key={i}
+              style={{ flexDirection: "row", justifyContent: "space-evenly", marginVertical: 10 }}
+            >
+              {rowItems.map((service, index) => (
+                <View
+                  key={index}
+                  style={{
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 10,
+                  }}
+                >
+                  <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => {
+                      if (service.needsModal) {
+                        setMaternalDeliveryModalVisible(true);
+                      }
+                    }}
+                  >
+                    <Image
+                      style={{ width: 50, height: 50 }}
+                      source={service.icon}
+                    />
+                  </TouchableOpacity>
+                  <Text
+                    style={{
+                      fontSize: 10,
+                      maxWidth: 100,
+                      textAlign: "center",
+                    }}
+                  >
+                    {service.title}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          );
+        }
+      
+        return rows;
+      };
+
     return (
         <View>
             <SafeAreaView style={styles.safeArea}>
@@ -103,137 +184,7 @@ export default function Index() {
                             <View style={{ alignItems: "center" }}>
                                 <Text style={styles.title}>Our Services Include:</Text>
                             </View>
-
-                            <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
-                                <View
-                                    style={{
-                                        flexDirection: "column",
-                                        gap: 10,
-                                        alignItems: "center",
-                                    }}
-                                >
-                                    <TouchableOpacity style={styles.button} onPress={() => {}}>
-                                        <Image
-                                            style={{
-                                                width: 50,
-                                                height: 50,
-                                            }}
-                                            source={require("@/assets/images/service-icons/family.png")}
-                                        />
-                                    </TouchableOpacity>
-                                    <Text style={{ fontSize: 10 }}>Family Planning</Text>
-                                </View>
-
-                                <View
-                                    style={{
-                                        flexDirection: "column",
-                                        gap: 10,
-                                        alignItems: "center",
-                                    }}
-                                >
-                                    <TouchableOpacity style={styles.button} onPress={() => {}}>
-                                        <Image
-                                            style={{
-                                                width: 50,
-                                                height: 50,
-                                            }}
-                                            source={require("@/assets/images/service-icons/mother.png")}
-                                        />
-                                    </TouchableOpacity>
-                                    <Text style={{ fontSize: 10 }}>Newborn Package</Text>
-                                </View>
-
-                                <View
-                                    style={{
-                                        flexDirection: "column",
-                                        gap: 10,
-                                        alignItems: "center",
-                                    }}
-                                >
-                                    <TouchableOpacity
-                                        style={styles.button}
-                                        onPress={() => {
-                                            setMaternalDeliveryModalVisible(true);
-                                        }}
-                                    >
-                                        <Image
-                                            style={{
-                                                width: 50,
-                                                height: 50,
-                                            }}
-                                            source={require("@/assets/images/service-icons/pregnant.png")}
-                                        />
-                                    </TouchableOpacity>
-                                    <Text
-                                        style={{
-                                            fontSize: 10,
-                                            maxWidth: 100,
-                                            textAlign: "center",
-                                        }}
-                                    >
-                                        Maternal Delivery Package
-                                    </Text>
-                                </View>
-                            </View>
-                            <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
-                                <View
-                                    style={{
-                                        flexDirection: "column",
-                                        gap: 10,
-                                        alignItems: "center",
-                                    }}
-                                >
-                                    <TouchableOpacity
-                                        style={styles.button}
-                                        onPress={() => {
-                                            setMaternalDeliveryModalVisible(true);
-                                        }}
-                                    >
-                                        <Image
-                                            style={{
-                                                width: 50,
-                                                height: 50,
-                                            }}
-                                            source={require("@/assets/images/service-icons/pediatrics.png")}
-                                        />
-                                    </TouchableOpacity>
-                                    <Text
-                                        style={{
-                                            fontSize: 10,
-                                            maxWidth: 100,
-                                            textAlign: "center",
-                                        }}
-                                    >
-                                        Prenatal and Postpartum Care
-                                    </Text>
-                                </View>
-                                <View
-                                    style={{
-                                        flexDirection: "column",
-                                        gap: 10,
-                                        alignItems: "center",
-                                    }}
-                                >
-                                    <TouchableOpacity style={styles.button} onPress={() => {}}>
-                                        <Image
-                                            style={{
-                                                width: 50,
-                                                height: 50,
-                                            }}
-                                            source={require("@/assets/images/service-icons/baby.png")}
-                                        />
-                                    </TouchableOpacity>
-                                    <Text
-                                        style={{
-                                            fontSize: 10,
-                                            maxWidth: 100,
-                                            textAlign: "center",
-                                        }}
-                                    >
-                                        Newborn Screening Test
-                                    </Text>
-                                </View>
-                            </View>
+                            {renderServiceRows()}
                         </ScrollView>
                         <MaternalDeliveryModal visible={maternalDeliveryModalVisible} setVisible={setMaternalDeliveryModalVisible} />
                     </View>

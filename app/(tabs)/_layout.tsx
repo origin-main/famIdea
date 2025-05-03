@@ -50,7 +50,7 @@ export default function TabLayout() {
                 }}
             />
             <Tabs.Screen
-                name="appointment/index"
+                name="appointment"
                 options={{
                     title: "Appointment",
                     href: "/appointment",

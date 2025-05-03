@@ -1,9 +1,9 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS } from "../../../components/constants";
-import { ActivityIndicator, Checkbox, Divider, IconButton, Menu, TextInput } from "react-native-paper";
+import { ActivityIndicator, Button, Checkbox, Divider, IconButton, Menu, TextInput } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { Dropdown } from "react-native-paper-dropdown";
 import { supabase } from "@/utils/supabase";
@@ -137,6 +137,17 @@ export default function Index() {
     // Get random static rating
     const getRating = () => (Math.random() * 2 + 3).toFixed(1);
 
+    // Filter birth centers based on selected service
+    const handleFilterPress = (value : any) => {
+        // Do something with the selected filter value
+        console.log("Selected filter value:", value);
+        closeMenu();
+      };
+
+    const [visible, setVisible] = React.useState(false);
+    const openMenu = () => setVisible(true);
+    const closeMenu = () => setVisible(false);
+
     return (
         <View>
             <SafeAreaView style={styles.safeArea}>
@@ -195,7 +206,28 @@ export default function Index() {
                                 <Text style={{ fontSize: 16 }}>Desc</Text>
                             </View>
                         </View>
-                        <IconButton icon="filter-variant" size={32} iconColor="black" onPress={() => console.log("Filter")} />
+                        <Menu
+                            visible={visible}
+                            onDismiss={closeMenu}
+                            anchorPosition="bottom"
+                            style={{ marginRight: 20 }}
+                            anchor={
+                                <IconButton
+                                    icon="filter-variant"
+                                    size={32}
+                                    iconColor="black"
+                                    onPress={openMenu}
+                                />
+                            }
+                        >
+                            {filters.map((filter) => (
+                                <Menu.Item
+                                    key={filter.value}
+                                    onPress={() => handleFilterPress(filter.value)}
+                                    title={filter.label}
+                                />
+                            ))}
+                        </Menu>
                     </View>
                 </View>
 
