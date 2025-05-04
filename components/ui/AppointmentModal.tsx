@@ -1,10 +1,11 @@
 import { COLORS, SERVICE_ICONS } from "@/components/constants";
 import { useAuth } from "@/context/AuthContext";
+import { addNotification } from "@/utils/common";
 import { supabase } from "@/utils/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Image, View, StyleSheet, TouchableOpacity, TextInput, ScrollView } from "react-native";
+import { Image, View, StyleSheet, ScrollView } from "react-native";
 import { ActivityIndicator, Button, Divider, Modal, Text } from "react-native-paper";
 
 interface AppointmentModalProps {
@@ -86,23 +87,38 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({ id, visible, setVis
 
     const handleScheduleClick = async () => {
         setInserting(true);
-        const { data, error } = await supabase.from("appointments").insert([
-            {
-                patient_id: user?.id,
-                service_id: service?.id,
-                birth_center_id: service?.birthCenterId,
-                appointment_date: appointmentDate,
-                status: "pending",
-            },
-        ]);
+        const { data, error } = await supabase
+            .from("appointments")
+            .insert([
+                {
+                    patient_id: user?.id,
+                    service_id: service?.id,
+                    birth_center_id: service?.birthCenterId,
+                    appointment_date: appointmentDate,
+                    status: "pending",
+                },
+            ])
+            .select();
 
-        if (error) {
-            console.error("Insert error:", error.message);
-        } else {
-            alert("Appointment scheduled successfully!");
-            setInserting(false);
-            router.replace("/(tabs)/appointment");
+        if (error || !data || data.length === 0) {
+            console.error("Failed to create appointment:", error?.message);
+            return;
         }
+
+        const insertedAppointment = data[0];
+
+        await addNotification({
+            type: "appointment",
+            title: "New Appointment",
+            body: `${user?.profile?.first_name} ${user?.profile?.last_name} has requested a new appointment.`,
+            patient_id: user?.id,
+            birth_center_id: service?.birthCenterId,
+            appointment_id: insertedAppointment.id,
+        });
+
+        alert("Appointment scheduled successfully!");
+        setInserting(false);
+        router.replace("/(tabs)/appointment");
     };
 
     return (

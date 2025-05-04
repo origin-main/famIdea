@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity, FlatList, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { COLORS } from "../../../components/constants";
+import { COLORS } from "@/components/constants";
 import { ActivityIndicator, Card } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";

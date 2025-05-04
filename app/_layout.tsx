@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import { Provider } from "react-native-paper";
 import { AuthProvider } from "@/context/AuthContext";
+import { AlertProvider } from "@/context/AlertContext";
 
 export default function RootLayout() {
     useEffect(() => {
@@ -24,13 +25,15 @@ export default function RootLayout() {
 
     return (
         <AuthProvider>
-            <Provider>
-                <Stack
-                    screenOptions={{
-                        headerShown: false,
-                    }}
-                />
-            </Provider>
+            <AlertProvider>
+                <Provider>
+                    <Stack
+                        screenOptions={{
+                            headerShown: false,
+                        }}
+                    />
+                </Provider>
+            </AlertProvider>
         </AuthProvider>
     );
 }

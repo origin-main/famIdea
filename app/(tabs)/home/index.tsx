@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS, SERVICE_ICONS } from "@/components/constants";
-import { ActivityIndicator, Avatar, TextInput } from "react-native-paper";
+import { Avatar, TextInput } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { router } from "expo-router";
@@ -10,6 +10,7 @@ import { getProfilePicture } from "@/utils/common";
 import * as Location from "expo-location";
 import { supabase } from "@/utils/supabase";
 import { getDistance } from "geolib";
+import { useAlert } from "@/context/AlertContext";
 
 type BirthCenter = {
     id: string;
@@ -28,6 +29,7 @@ const DISTANCE_THRESHOLD_METERS = DISTANCE_THRESHOLD_KM * 1000;
 
 export default function Index() {
     const { user } = useAuth();
+    const { notificationCount } = useAlert();
     const [profilePicture, setProfilePicture] = useState<string | null>(null);
     const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
     const [nearbyBirthCenters, setNearbyBirthCenters] = useState<BirthCenter[]>([]);
@@ -226,6 +228,13 @@ export default function Index() {
                         </View>
                     </View>
                     <View>
+                        {notificationCount > 0 && (
+                            <View style={styles.badgeCount}>
+                                <Text style={{ fontSize: 12, fontWeight: "bold", color: "white" }}>
+                                    {notificationCount > 9 ? "9+" : notificationCount}
+                                </Text>
+                            </View>
+                        )}
                         <Ionicons
                             size={28}
                             name="notifications"
@@ -402,5 +411,18 @@ const styles = StyleSheet.create({
         fontSize: 15,
         textAlign: "center",
         color: "white",
+    },
+    badgeCount: {
+        position: "absolute",
+        top: -5,
+        right: -5,
+        backgroundColor: "red",
+        justifyContent: "center",
+        alignItems: "center",
+        display: "flex",
+        width: 20,
+        height: 20,
+        borderRadius: 100,
+        zIndex: 100,
     },
 });

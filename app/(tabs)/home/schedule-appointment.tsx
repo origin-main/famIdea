@@ -1,7 +1,6 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { COLORS } from "../../../components/constants";
-import { Button, IconButton, TextInput } from "react-native-paper";
+import { COLORS } from "@/components/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -100,7 +99,6 @@ export default function Index() {
         }
 
         const slots = JSON.parse(timeslotData.slots);
-        console.log("slots", slots.length);
 
         // Get all appointments for that date and birth center
         const { data: appointments, error: appointmentError } = await supabase
@@ -117,7 +115,6 @@ export default function Index() {
         }
 
         const takenTimes = appointments?.map((appt) => new Date(appt.appointment_date).toISOString().slice(11, 16));
-        console.log("takenTimes", takenTimes);
 
         setTimeSlots(
             slots.map((slot: any) => {
@@ -130,7 +127,6 @@ export default function Index() {
 
                 const slotTimeStr = slotDate.toISOString().slice(11, 16); // "HH:MM" in UTC
                 const isTaken = takenTimes.includes(slotTimeStr);
-                console.log("slotstart", `${selectedDate}T${slotTimeStr}:00.000Z`);
 
                 return {
                     label: localTime,

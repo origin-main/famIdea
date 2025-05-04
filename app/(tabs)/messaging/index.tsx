@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { View, StyleSheet, Image, Text, ImageBackground, FlatList, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { COLORS } from "@/components/constants";
-import { ActivityIndicator, Card, IconButton } from "react-native-paper";
+import { ActivityIndicator, Card } from "react-native-paper";
 import { router } from "expo-router";
 import { supabase } from "@/utils/supabase";
 import { useAuth } from "@/context/AuthContext";
 import { formatDistanceToNow } from "date-fns";
+import { useAlert } from "@/context/AlertContext";
 
 type Chat = {
     birth_center_id: string;
@@ -22,11 +22,13 @@ type Chat = {
 
 export default function Index() {
     const { user } = useAuth();
+    const { markMessagesAsRead } = useAlert();
     const [chatList, setChatList] = useState<Chat[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
         fetchChatList();
+        markMessagesAsRead();
     }, []);
 
     useEffect(() => {

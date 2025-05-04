@@ -1,11 +1,12 @@
-import { COLORS, SERVICE_ICONS } from "@/components/constants";
+import { COLORS } from "@/components/constants";
 import { useAuth } from "@/context/AuthContext";
+import { addNotification } from "@/utils/common";
 import { supabase } from "@/utils/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { Image, View, StyleSheet, TouchableOpacity, TextInput, ScrollView, Alert } from "react-native";
-import { ActivityIndicator, Button, Divider, Modal, Text } from "react-native-paper";
+import { Image, View, StyleSheet, TouchableOpacity, ScrollView, Alert } from "react-native";
+import { ActivityIndicator, Button, Divider, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type Appointment = {
@@ -32,7 +33,6 @@ const AppointmentDetails = () => {
     const { user } = useAuth();
     const [appointment, setAppointment] = useState<Appointment | null>(null);
     const [loading, setLoading] = useState(false);
-    const [inserting, setInserting] = useState(false);
 
     useEffect(() => {
         if (id) {
@@ -98,6 +98,14 @@ const AppointmentDetails = () => {
                     text: "Yes",
                     onPress: async () => {
                         const { error } = await supabase.from("appointments").update({ status: "cancelled" }).eq("id", id);
+                        await addNotification({
+                            type: "appointment",
+                            title: "Appointment Cancelled",
+                            body: `${user?.profile?.first_name} ${user?.profile?.last_name} has cancelled the appointment.`,
+                            patient_id: user?.id,
+                            birth_center_id: appointment?.birthCenter.id,
+                            appointment_id: appointment?.id,
+                        });
 
                         if (error) {
                             console.error("Failed to cancel appointment:", error.message);
