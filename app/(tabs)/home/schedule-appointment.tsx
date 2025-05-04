@@ -1,191 +1,322 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS } from "../../../components/constants";
 import { Button, IconButton, TextInput } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
-import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Calendar } from "react-native-calendars";
+import { supabase } from "@/utils/supabase";
+import AppointmentModal from "@/components/ui/AppointmentModal";
+
+type Service = {
+    id: string;
+    birthCenterId: string;
+    description: string;
+    price?: number;
+    duration?: string;
+    serviceId: number;
+    name: string;
+    birthCenter: {
+        name: string;
+        address: string;
+        pictureUrl: string;
+    };
+};
 
 export default function Index() {
-  const router = useRouter();
-  const [selected, setSelected] = useState("");
+    const { serviceId } = useLocalSearchParams();
+    const router = useRouter();
+    const [selectedDate, setSelectedDate] = useState("");
+    const [selectedTime, setSelectedTime] = useState("");
+    const [service, setService] = useState<Service | null>(null);
+    const [timeSlots, setTimeSlots] = useState<{ label: string; value: string; available: boolean }[]>([]);
 
-  const timeSlots = [
-    { label: "9:00", value: "9:00" },
-    { label: "10:00", value: "10:00" },
-    { label: "11:00", value: "11:00" },
-    { label: "1:00", value: "1:00" },
-    { label: "2:00", value: "2:00" },
-    { label: "3:00", value: "3:00" },
-    { label: "4:00", value: "4:00" },
-    { label: "5:00", value: "5:00" },
-  ];
+    // for appointment modal
+    const [apptModalVisible, setApptModalVisible] = useState(false);
 
-  return (
-    <View>
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.titleBar}>
-          <View style={{ position: "absolute", left: 20 }}>
-            <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={24} color="black" />
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.title}>Appointment Schedule</Text>
-        </View>
+    useEffect(() => {
+        if (serviceId) {
+            fetchService();
+        }
+    }, [serviceId]);
 
-        <View
-          style={{
-            width: "100%",
-            padding: 10,
-            justifyContent: "center",
-          }}
-        >
-          <View
-            style={{
-              width: "100%",
-              height: 170,
-              backgroundColor: COLORS.white,
-              justifyContent: "center",
-            }}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-                height: "100%",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 10,
-              }}
-            >
-              <Image
-                style={{
-                  width: "25%",
-                  height: "50%",
-                  backgroundColor: COLORS.lightBlue,
-                  objectFit: "fill",
-                  margin: 5,
-                }}
-                source={require("@/assets/images/service-icons/health-clinic.png")}
-              />
-              {/* Clinic Details */}
-              <View style={{ alignItems: "flex-start", gap: 3, width: "50%" }}>
+    const fetchService = async () => {
+        const { data, error } = await supabase
+            .from("services")
+            .select(
+                `
+                    id,
+                    birth_center_id,
+                    description,
+                    price,
+                    duration,
+                    service_id,
+                    services_list (name),
+                    birth_centers (name, address, picture_url)
+                    `
+            )
+            .eq("id", serviceId)
+            .single();
+
+        if (error) throw error;
+
+        const serviceData = data as any;
+
+        setService({
+            id: serviceData.id,
+            birthCenterId: serviceData.birth_center_id,
+            description: serviceData.description,
+            price: serviceData.price,
+            duration: serviceData.duration,
+            serviceId: serviceData.service_id,
+            name: serviceData.services_list.name,
+            birthCenter: {
+                name: serviceData.birth_centers.name,
+                address: serviceData.birth_centers.address,
+                pictureUrl: serviceData.birth_centers.picture_url,
+            },
+        });
+    };
+
+    const fetchTimeSlots = async (date: string) => {
+        if (!service) return;
+
+        const { data: timeslotData, error: timeslotError } = await supabase
+            .from("timeslots")
+            .select("slots")
+            .eq("birth_center_id", service.birthCenterId)
+            .eq("date", date)
+            .maybeSingle();
+
+        if (timeslotError) {
+            console.error("Error fetching timeslots:", timeslotError.message);
+            return;
+        }
+
+        if (!timeslotData) {
+            setTimeSlots([]);
+            return;
+        }
+
+        const slots = JSON.parse(timeslotData.slots);
+        console.log("slots", slots.length);
+
+        // Get all appointments for that date and birth center
+        const { data: appointments, error: appointmentError } = await supabase
+            .from("appointments")
+            .select("appointment_date")
+            .eq("birth_center_id", service.birthCenterId)
+            .in("status", ["pending", "approved"])
+            .gte("appointment_date", `${date}T00:00:00Z`)
+            .lt("appointment_date", `${date}T23:59:59Z`);
+
+        if (appointmentError) {
+            console.error("Error fetching appointments:", appointmentError.message);
+            return;
+        }
+
+        const takenTimes = appointments?.map((appt) => new Date(appt.appointment_date).toISOString().slice(11, 16));
+        console.log("takenTimes", takenTimes);
+
+        setTimeSlots(
+            slots.map((slot: any) => {
+                const slotDate = new Date(slot.start);
+                const localTime = slotDate.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
+                });
+
+                const slotTimeStr = slotDate.toISOString().slice(11, 16); // "HH:MM" in UTC
+                const isTaken = takenTimes.includes(slotTimeStr);
+                console.log("slotstart", `${selectedDate}T${slotTimeStr}:00.000Z`);
+
+                return {
+                    label: localTime,
+                    value: `${date}T${slotTimeStr}:00.000Z`,
+                    available: !isTaken,
+                };
+            })
+        );
+    };
+
+    return (
+        <View>
+            <SafeAreaView style={styles.safeArea}>
+                <View style={styles.titleBar}>
+                    <View style={{ position: "absolute", left: 20 }}>
+                        <TouchableOpacity onPress={() => router.back()}>
+                            <Ionicons name="chevron-back" size={24} color="black" />
+                        </TouchableOpacity>
+                    </View>
+                    <Text style={styles.title}>Appointment Schedule</Text>
+                </View>
+
                 <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <Text style={{ fontSize: 13, fontWeight: "bold" }}>
-                    Margarita birthing center
-                  </Text>
-                  <IconButton
-                    size={15}
-                    icon="heart-outline"
-                    iconColor={"black"}
-                    onPress={() => {
-                      alert("heart clicked");
+                    style={{
+                        width: "100%",
+                        flex: 1,
+                        padding: 10,
+                        justifyContent: "center",
                     }}
-                  />
+                >
+                    <View
+                        style={{
+                            width: "100%",
+                            height: 170,
+                            backgroundColor: COLORS.white,
+                            justifyContent: "center",
+                        }}
+                    >
+                        <View style={styles.clinicContainer}>
+                            <Image
+                                style={{
+                                    width: "25%",
+                                    height: "50%",
+                                    backgroundColor: COLORS.lightBlue,
+                                    objectFit: "fill",
+                                    margin: 5,
+                                }}
+                                source={service?.birthCenter.pictureUrl || require("@/assets/images/service-icons/health-clinic.png")}
+                            />
+                            {/* Clinic Details */}
+                            <View style={{ gap: 3, width: "50%" }}>
+                                <View>
+                                    <Text style={{ fontSize: 15, fontWeight: "bold" }} numberOfLines={2}>
+                                        {service?.birthCenter.name}
+                                    </Text>
+                                    <Text style={{ fontSize: 13 }} numberOfLines={2}>
+                                        {service?.birthCenter.address}
+                                    </Text>
+                                </View>
+                                <View style={{ flexDirection: "row", gap: 5 }}>
+                                    <Ionicons size={15} name="star-half" color={"gold"} />
+                                    <Text style={{ fontSize: 12, fontWeight: "bold" }}>4.5</Text>
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+                    <View
+                        style={{
+                            justifyContent: "center",
+                            alignItems: "center",
+                        }}
+                    >
+                        <Calendar
+                            onDayPress={(day: any) => {
+                                setSelectedDate(day.dateString);
+                                fetchTimeSlots(day.dateString);
+                            }}
+                            minDate={new Date().toISOString()}
+                            disableAllTouchEventsForDisabledDays
+                            markedDates={{
+                                [selectedDate]: {
+                                    selected: true,
+                                    disableTouchEvent: true,
+                                    marked: true,
+                                },
+                            }}
+                            style={{
+                                width: 400,
+                                minHeight: 300,
+                            }}
+                            theme={{
+                                textDayFontSize: 12,
+                                textMonthFontSize: 14,
+                                textDayHeaderFontSize: 12,
+                            }}
+                        />
+                    </View>
+                    <Text style={{ fontSize: 13, fontWeight: "bold", marginHorizontal: 10 }}>
+                        Available Slots: <Text>{timeSlots.filter((slot) => slot.available).length}</Text>
+                    </Text>
+                    <ScrollView
+                        showsVerticalScrollIndicator={false}
+                        contentContainerStyle={{
+                            flexDirection: "row",
+                            gap: 5,
+                            justifyContent: "center",
+                            flexWrap: "wrap",
+                            paddingBottom: 20,
+                            paddingTop: 10,
+                        }}
+                    >
+                        {timeSlots.length === 0 ? (
+                            <Text style={{ fontSize: 13, marginHorizontal: 10, marginTop: 20, width: "80%", textAlign: "center" }}>
+                                No available slots for this day. Please select another day.
+                            </Text>
+                        ) : (
+                            timeSlots.map((data, index) => (
+                                <TouchableOpacity
+                                    key={index}
+                                    disabled={!data.available}
+                                    style={[styles.button, { borderColor: data.available ? COLORS.darkBlue : "lightgrey" }]}
+                                    onPress={() => {
+                                        setSelectedTime(data.value);
+                                        setApptModalVisible(true);
+                                    }}
+                                >
+                                    <Text style={{ color: data.available ? COLORS.darkBlue : "lightgrey" }}>{data.label}</Text>
+                                </TouchableOpacity>
+                            ))
+                        )}
+                    </ScrollView>
                 </View>
-                <View style={{ flexDirection: "row", gap: 5 }}>
-                  <Ionicons size={15} name="star-half" color={"black"} />
-                  <Text style={{ fontSize: 12, fontWeight: "bold" }}>4.5</Text>
-                </View>
-              </View>
-            </View>
-          </View>
-          <View
-            style={{
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Calendar
-              onDayPress={(day: any) => {
-                setSelected(day.dateString);
-              }}
-              markedDates={{
-                [selected]: {
-                  selected: true,
-                  disableTouchEvent: true,
-                  selectedDotColor: "orange",
-                },
-              }}
-              style={{
-                width: 400, // Adjust width to fit screen
-                height: 350, // Set a fixed height to prevent overlap
-              }}
-              theme={{
-                textDayFontSize: 12,
-                textMonthFontSize: 14,
-                textDayHeaderFontSize: 12,
-              }}
-            />
-          </View>
-          <View
-            style={{
-              flexDirection: "row",
-              gap: 5,
-              margin: 10,
-              maxWidth: "100%",
-              justifyContent: "center",
-              flexWrap: "wrap",
-            }}
-          >
-            {timeSlots.map((data, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.button}
-                onPress={() => {}}
-              >
-                <Text>{data.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+                <AppointmentModal
+                    id={service?.id || null}
+                    visible={apptModalVisible}
+                    setVisible={setApptModalVisible}
+                    appointmentDate={selectedTime}
+                />
+            </SafeAreaView>
         </View>
-      </SafeAreaView>
-    </View>
-  );
+    );
 }
 
 const styles = StyleSheet.create({
-  titleBar: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    width: "100%",
-    backgroundColor: COLORS.white,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-  },
-  background: {
-    flex: 1,
-    justifyContent: "center",
-    backgroundColor: COLORS.white,
-    alignItems: "center",
-  },
-  safeArea: {
-    width: "100%",
-    height: "100%",
-    backgroundColor: COLORS.white,
-    alignItems: "flex-start",
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "black",
-  },
-  button: {
-    backgroundColor: COLORS.white,
-    borderRadius: 10,
-    borderStyle: "solid",
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 10,
-    width: 80,
-    height: 50,
-  },
+    titleBar: {
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "center",
+        width: "100%",
+        backgroundColor: COLORS.white,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+    },
+    background: {
+        flex: 1,
+        justifyContent: "center",
+        backgroundColor: COLORS.white,
+        alignItems: "center",
+    },
+    safeArea: {
+        width: "100%",
+        height: "100%",
+        backgroundColor: COLORS.white,
+        alignItems: "flex-start",
+    },
+    title: {
+        fontSize: 20,
+        fontWeight: "bold",
+        color: "black",
+    },
+    button: {
+        backgroundColor: COLORS.white,
+        borderRadius: 10,
+        borderStyle: "solid",
+        borderWidth: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        marginTop: 10,
+        width: 80,
+        height: 50,
+    },
+    clinicContainer: {
+        flexDirection: "row",
+        height: "100%",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 10,
+    },
 });

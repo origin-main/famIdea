@@ -68,7 +68,7 @@ export default function Index() {
 
     const handleMessageClick = (item: Chat) => {
         router.navigate({
-            pathname: "/messaging/chat",
+            pathname: "/chat",
             params: { birthCenterId: item?.birth_center_id, name: item?.name },
         });
     };

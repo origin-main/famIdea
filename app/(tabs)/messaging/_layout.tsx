@@ -9,7 +9,6 @@ export default function MessagingLayout() {
     return (
         <Stack>
             <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="chat" options={{ headerShown: false }} />
         </Stack>
     );
 }

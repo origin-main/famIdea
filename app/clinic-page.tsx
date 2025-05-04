@@ -1,13 +1,19 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { COLORS } from "../../../components/constants";
-import { ActivityIndicator, IconButton, TextInput } from "react-native-paper";
+import { COLORS, SERVICE_ICONS } from "@/components/constants";
+import { ActivityIndicator } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import MaternalDeliveryModal from "./serviceModals/MaternalDeliveryModal";
 import { supabase } from "@/utils/supabase";
 import BirthCenterCard from "@/components/ui/BirthCenterCard";
+import ServiceModal from "@/components/ui/ServiceModal";
+
+type Service = {
+    id: string;
+    serviceId: number;
+    name: string;
+};
 
 type BirthCenter = {
     id: string;
@@ -18,6 +24,7 @@ type BirthCenter = {
     latitude?: string;
     longitude?: string;
     pictureUrl: string;
+    services: Service[];
 };
 
 export default function Index() {
@@ -26,7 +33,8 @@ export default function Index() {
     const [loading, setLoading] = useState(false);
     const [birthCenterData, setBirthCenterData] = useState<BirthCenter | null>(null);
 
-    const [maternalDeliveryModalVisible, setMaternalDeliveryModalVisible] = useState<boolean>(false);
+    const [serviceModalVisible, setServiceModalVisible] = useState<boolean>(false);
+    const [selectedService, setSelectedService] = useState<string | null>(null);
 
     useEffect(() => {
         if (id) {
@@ -38,7 +46,17 @@ export default function Index() {
         setLoading(true);
         const { data, error } = await supabase
             .from("birth_centers")
-            .select("id, name, address, contact_number, description, latitude, longitude, picture_url")
+            .select(
+                `id, name, address, contact_number, description, latitude, longitude, picture_url,
+                services (
+                  id,
+                  service_id,
+                  services_list (
+                    id,
+                    name
+                  )
+                )`
+            )
             .eq("id", id)
             .single();
 
@@ -56,6 +74,11 @@ export default function Index() {
             latitude: data.latitude,
             longitude: data.longitude,
             pictureUrl: data.picture_url,
+            services: data.services.map((s: any) => ({
+                id: s.id,
+                serviceId: s.services_list.id,
+                name: s.services_list.name,
+            })),
         });
 
         setLoading(false);
@@ -63,91 +86,59 @@ export default function Index() {
 
     const handleMessageClick = () => {
         router.navigate({
-            pathname: "/messaging/chat",
+            pathname: "/chat",
             params: { birthCenterId: birthCenterData?.id, name: birthCenterData?.name },
         });
     };
 
-    //sample Data
-    const SERVICES = [
-        {
-          title: "Family Planning",
-          icon: require("@/assets/images/service-icons/family.png"),
-          needsModal: false,
-        },
-        {
-          title: "Newborn Package",
-          icon: require("@/assets/images/service-icons/mother.png"),
-          needsModal: false,
-        },
-        {
-          title: "Maternal Delivery Package",
-          icon: require("@/assets/images/service-icons/pregnant.png"),
-          needsModal: true,
-        },
-        {
-          title: "Prenatal and Postpartum Care",
-          icon: require("@/assets/images/service-icons/pediatrics.png"),
-          needsModal: true,
-        },
-        {
-          title: "Newborn Screening Test",
-          icon: require("@/assets/images/service-icons/baby.png"),
-          needsModal: false,
-        },
-      ];
-
     // Function to render service rows
     const renderServiceRows = () => {
+        if (!birthCenterData) {
+            return null;
+        }
+
         const rows = [];
         const itemsPerRow = 3;
-      
-        for (let i = 0; i < SERVICES.length; i += itemsPerRow) {
-          const rowItems = SERVICES.slice(i, i + itemsPerRow);
-          rows.push(
-            <View
-              key={i}
-              style={{ flexDirection: "row", justifyContent: "space-evenly", marginVertical: 10 }}
-            >
-              {rowItems.map((service, index) => (
-                <View
-                  key={index}
-                  style={{
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 10,
-                  }}
-                >
-                  <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => {
-                      if (service.needsModal) {
-                        setMaternalDeliveryModalVisible(true);
-                      }
-                    }}
-                  >
-                    <Image
-                      style={{ width: 50, height: 50 }}
-                      source={service.icon}
-                    />
-                  </TouchableOpacity>
-                  <Text
-                    style={{
-                      fontSize: 10,
-                      maxWidth: 100,
-                      textAlign: "center",
-                    }}
-                  >
-                    {service.title}
-                  </Text>
+
+        for (let i = 0; i < birthCenterData.services.length; i += itemsPerRow) {
+            const rowItems = birthCenterData.services.slice(i, i + itemsPerRow);
+            rows.push(
+                <View key={i} style={{ flexDirection: "row", justifyContent: "space-evenly", marginVertical: 10 }}>
+                    {rowItems.map((service: Service, index) => (
+                        <View
+                            key={index}
+                            style={{
+                                flexDirection: "column",
+                                alignItems: "center",
+                                gap: 10,
+                            }}
+                        >
+                            <TouchableOpacity
+                                style={styles.button}
+                                onPress={() => {
+                                    setSelectedService(service.id);
+                                    setServiceModalVisible(true);
+                                }}
+                            >
+                                <Image style={{ width: 50, height: 50 }} source={SERVICE_ICONS[service.serviceId]} />
+                            </TouchableOpacity>
+                            <Text
+                                style={{
+                                    fontSize: 10,
+                                    maxWidth: 100,
+                                    textAlign: "center",
+                                }}
+                            >
+                                {service.name}
+                            </Text>
+                        </View>
+                    ))}
                 </View>
-              ))}
-            </View>
-          );
+            );
         }
-      
+
         return rows;
-      };
+    };
 
     return (
         <View>
@@ -186,7 +177,7 @@ export default function Index() {
                             </View>
                             {renderServiceRows()}
                         </ScrollView>
-                        <MaternalDeliveryModal visible={maternalDeliveryModalVisible} setVisible={setMaternalDeliveryModalVisible} />
+                        <ServiceModal id={selectedService} visible={serviceModalVisible} setVisible={setServiceModalVisible} />
                     </View>
                 )}
             </SafeAreaView>

@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { COLORS } from "../../../components/constants";
-import { ActivityIndicator, Button, Checkbox, Dialog, IconButton, Menu, Portal, TextInput } from "react-native-paper";
+import { COLORS } from "@/components/constants";
+import { ActivityIndicator, Button, Checkbox, Dialog, IconButton, Portal, TextInput } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -33,12 +33,11 @@ export default function Index() {
     // Search, filter, sort
     const [searchValue, setSearchValue] = useState("");
     const [sortValue, setSortValue] = useState("");
-    const [filterValue, setFilterValue] = useState(Number(filter) || 0);
     const [descChecked, setDescChecked] = useState(false);
     const [filters, setFilters] = useState<{ label: string; value: number }[] | []>([]);
 
     const [birthCenters, setBirthCenters] = useState<BirthCenter[]>([]);
-    const [selectedFilters, setSelectedFilters] = useState<number[]>([]);
+    const [selectedFilters, setSelectedFilters] = useState<number[]>(filter ? [Number(filter)] : []);
 
     const options = [
         { label: "Name", value: "name" },
@@ -129,8 +128,7 @@ export default function Index() {
         const matchesSearch =
             center.name.toLowerCase().includes(searchValue.toLowerCase()) || center.address.toLowerCase().includes(searchValue.toLowerCase());
 
-        const matchesService =
-            selectedFilters.length === 0 || selectedFilters.some((f) => center.services.includes(f));
+        const matchesService = selectedFilters.length === 0 || selectedFilters.some((f) => center.services.includes(f));
 
         return matchesSearch && matchesService;
     });
@@ -161,7 +159,7 @@ export default function Index() {
 
     const handleCardClick = (centerId: string) => {
         router.navigate({
-            pathname: "/home/clinic-page",
+            pathname: "/clinic-page",
             params: { id: centerId },
         });
     };
@@ -175,11 +173,7 @@ export default function Index() {
     const closeFilterDialog = () => setFilterDialogVisible(false);
 
     const toggleFilter = (value: any) => {
-        setSelectedFilters((prev: any) =>
-            prev.includes(value)
-                ? prev.filter((v: any) => v !== value)
-                : [...prev, value]
-        );
+        setSelectedFilters((prev: any) => (prev.includes(value) ? prev.filter((v: any) => v !== value) : [...prev, value]));
     };
 
     return (
@@ -240,12 +234,7 @@ export default function Index() {
                                 <Text style={{ fontSize: 16 }}>Desc</Text>
                             </View>
                         </View>
-                        <IconButton
-                            icon="filter-variant"
-                            size={32}
-                            iconColor="black"
-                            onPress={openFilterDialog}
-                        />
+                        <IconButton icon="filter-variant" size={32} iconColor="black" onPress={openFilterDialog} />
 
                         <Portal>
                             <Dialog visible={filterDialogVisible} onDismiss={closeFilterDialog}>
@@ -256,21 +245,31 @@ export default function Index() {
                                             <Checkbox.Item
                                                 key={filter.value}
                                                 label={filter.label}
-                                                status={selectedFilters.includes(filter.value) ? 'checked' : 'unchecked'}
+                                                status={selectedFilters.includes(filter.value) ? "checked" : "unchecked"}
                                                 onPress={() => toggleFilter(filter.value)}
+                                                color={COLORS.darkBlue}
                                             />
                                         ))}
                                     </ScrollView>
                                 </Dialog.ScrollArea>
                                 <Dialog.Actions style={{ justifyContent: "space-between" }}>
-                                <Button
+                                    <Button
                                         onPress={() => setSelectedFilters([])}
-                                        style={{ alignSelf: 'flex-end', marginRight: 10 }}
+                                        style={{ alignSelf: "flex-end", marginRight: 10 }}
                                         compact
+                                        textColor={COLORS.darkBlue}
                                     >
                                         Clear
                                     </Button>
-                                    <Button style={{paddingHorizontal: 5}} mode="contained" onPress={closeFilterDialog}>Apply</Button>
+                                    <Button
+                                        style={{ paddingHorizontal: 5 }}
+                                        mode="contained"
+                                        onPress={closeFilterDialog}
+                                        buttonColor={COLORS.lightBlue}
+                                        textColor="black"
+                                    >
+                                        Apply
+                                    </Button>
                                 </Dialog.Actions>
                             </Dialog>
                         </Portal>

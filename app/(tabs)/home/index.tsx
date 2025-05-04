@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS, SERVICE_ICONS } from "@/components/constants";
-import { Avatar, TextInput } from "react-native-paper";
+import { ActivityIndicator, Avatar, TextInput } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { router } from "expo-router";
@@ -23,7 +23,7 @@ type BirthCenter = {
     distance?: number;
 };
 
-const DISTANCE_THRESHOLD_KM = 5;
+const DISTANCE_THRESHOLD_KM = 5; // 5km
 const DISTANCE_THRESHOLD_METERS = DISTANCE_THRESHOLD_KM * 1000;
 
 export default function Index() {
@@ -68,6 +68,7 @@ export default function Index() {
         if (!location) return;
 
         setLoading(true);
+
         const { data, error } = await supabase
             .from("birth_centers")
             .select("id, name, address, contact_number, description, latitude, longitude, picture_url")
@@ -92,23 +93,35 @@ export default function Index() {
                 pictureUrl: center.picture_url,
             }));
 
-        const nearbyCenters = birthCenters
-            .map((center) => {
-                const distance = getDistance(location!, {
-                    latitude: center.latitude,
-                    longitude: center.longitude,
-                });
+        const searchWithinRadius = (radiusMeters: number) => {
+            return birthCenters
+                .map((center) => {
+                    const distance = getDistance(location!, {
+                        latitude: center.latitude,
+                        longitude: center.longitude,
+                    });
 
-                return {
-                    ...center,
-                    distance,
-                };
-            })
-            .filter((center) => center.distance <= DISTANCE_THRESHOLD_METERS)
-            .sort((a, b) => a.distance - b.distance);
+                    return {
+                        ...center,
+                        distance,
+                    };
+                })
+                .filter((center) => center.distance <= radiusMeters)
+                .sort((a, b) => a.distance - b.distance);
+        };
+
+        let radius = DISTANCE_THRESHOLD_METERS; // Start with 5km
+        let nearbyCenters: typeof birthCenters = [];
+
+        while (nearbyCenters.length === 0 && radius <= 20000) {
+            // Max 20km to avoid infinite loop
+            nearbyCenters = searchWithinRadius(radius);
+            if (nearbyCenters.length === 0) {
+                radius += 1000; // Increase by 1km
+            }
+        }
 
         setNearbyBirthCenters(nearbyCenters);
-
         setLoading(false);
     };
 
@@ -135,7 +148,7 @@ export default function Index() {
 
     const handleBirthCenterClick = (centerId: string) => {
         router.navigate({
-            pathname: "/home/clinic-page",
+            pathname: "/clinic-page",
             params: { id: centerId },
         });
     };
@@ -270,6 +283,7 @@ export default function Index() {
                         width: "100%",
                         borderRadius: 10,
                         marginTop: 10,
+                        flex: 1,
                     }}
                 >
                     <View
@@ -290,8 +304,7 @@ export default function Index() {
                             color={"black"}
                         />
                     </View>
-
-                    <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
+                    <View style={{ flexDirection: "row", justifyContent: "space-evenly", flex: 1 }}>
                         <ScrollView
                             horizontal
                             showsHorizontalScrollIndicator={false}
@@ -361,7 +374,7 @@ const styles = StyleSheet.create({
     },
     clinicCard: {
         width: 150,
-        height: 170,
+        flex: 1,
         backgroundColor: COLORS.white,
         alignItems: "center",
         justifyContent: "center",

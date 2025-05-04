@@ -10,6 +10,7 @@ export const COLORS = {
     red: "red", // Example: Red for error messages
     success: "#4cd475", // Example: Green for success messages
     error: "#EF9A9A",
+    grey: "#f0f0f0",
 };
 
 export const SERVICE_ICONS: Record<string, any> = {

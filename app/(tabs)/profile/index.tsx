@@ -42,11 +42,6 @@ export default function Index() {
         <View>
             <SafeAreaView style={styles.safeArea}>
                 <View style={styles.titleBar}>
-                    <View style={{ position: "absolute", left: 20 }}>
-                        <TouchableOpacity onPress={() => router.back()}>
-                            <Ionicons name="chevron-back" size={24} color="black" />
-                        </TouchableOpacity>
-                    </View>
                     <Text style={styles.title}>Profile</Text>
                 </View>
 
@@ -347,6 +342,8 @@ const styles = StyleSheet.create({
     safeArea: {
         width: "100%",
         alignItems: "center",
+        backgroundColor: "white",
+        height: "100%",
     },
     title: {
         fontSize: 20,

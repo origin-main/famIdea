@@ -6,14 +6,13 @@ import "react-native-reanimated";
 SplashScreen.preventAutoHideAsync();
 
 export default function NotificationsLayout() {
-  return (
-    <Stack>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="patient-info" options={{ headerShown: false }} />
-      <Stack.Screen name="child-info" options={{ headerShown: false }} />
-      <Stack.Screen name="security-info" options={{ headerShown: false }} />
-      <Stack.Screen name="favorites" options={{ headerShown: false }} />
-      {/* <Stack.Screen name="clinic-page" options={{ headerShown: false }} /> */}
-    </Stack>
-  );
+    return (
+        <Stack>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="patient-info" options={{ headerShown: false }} />
+            <Stack.Screen name="child-info" options={{ headerShown: false }} />
+            <Stack.Screen name="security-info" options={{ headerShown: false }} />
+            <Stack.Screen name="favorites" options={{ headerShown: false }} />
+        </Stack>
+    );
 }

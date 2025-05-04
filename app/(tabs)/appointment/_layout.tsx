@@ -9,7 +9,7 @@ export default function AppointmentLayout() {
     return (
         <Stack>
             <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="history" options={{ headerShown: false }} />
+            <Stack.Screen name="appointment-details" options={{ headerShown: false }} />
         </Stack>
     );
 }

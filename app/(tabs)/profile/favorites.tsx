@@ -57,7 +57,7 @@ export default function Index() {
 
     const handleBirthCenterClick = (centerId: string) => {
         router.push({
-            pathname: "/home/clinic-page",
+            pathname: "/clinic-page",
             params: { id: centerId },
         });
     };
