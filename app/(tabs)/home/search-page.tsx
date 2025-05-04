@@ -4,7 +4,7 @@ import { COLORS } from "../../../components/constants";
 import { ActivityIndicator, Checkbox, IconButton, Menu, TextInput } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Dropdown } from "react-native-paper-dropdown";
 import { supabase } from "@/utils/supabase";
 import BirthCenterCard from "@/components/ui/BirthCenterCard";
@@ -26,13 +26,14 @@ type BirthCenter = {
 
 export default function Index() {
     const router = useRouter();
+    const { filter } = useLocalSearchParams();
     const [loading, setLoading] = useState(false);
     const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
     // Search, filter, sort
     const [searchValue, setSearchValue] = useState("");
     const [sortValue, setSortValue] = useState("");
-    const [filterValue, setFilterValue] = useState(0);
+    const [filterValue, setFilterValue] = useState(Number(filter) || 0);
     const [descChecked, setDescChecked] = useState(false);
     const [filters, setFilters] = useState<{ label: string; value: number }[] | []>([]);
 

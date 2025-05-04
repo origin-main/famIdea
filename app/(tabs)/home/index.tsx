@@ -10,6 +10,7 @@ import { getProfilePicture } from "@/utils/common";
 import * as Location from "expo-location";
 import { supabase } from "@/utils/supabase";
 import { getDistance, orderByDistance } from "geolib";
+import { set } from "date-fns";
 
 type BirthCenter = {
     id: string;
@@ -31,7 +32,16 @@ export default function Index() {
     const [profilePicture, setProfilePicture] = useState<string | null>(null);
     const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
     const [nearbyBirthCenters, setNearbyBirthCenters] = useState<BirthCenter[]>([]);
+    const [services, setServices] = useState<{ label: string; value: number }[]>([]);
     const [loading, setLoading] = useState(false);
+
+    const serviceIcons: Record<string, any> = {
+        1: require("@/assets/images/service-icons/pregnant.png"),
+        2: require("@/assets/images/service-icons/pediatrics.png"),
+        3: require("@/assets/images/service-icons/baby.png"),
+        4: require("@/assets/images/service-icons/health-clinic.png"),
+        5: require("@/assets/images/service-icons/family.png"),
+    };
 
     // Set user's profile picture
     useEffect(() => {
@@ -59,6 +69,7 @@ export default function Index() {
 
     useEffect(() => {
         fetchNearbyBirthCenters();
+        fetchServices();
     }, [location]);
 
     // Get nearby birth centers
@@ -110,6 +121,27 @@ export default function Index() {
         setLoading(false);
     };
 
+    const fetchServices = async () => {
+        const { data, error } = await supabase.from("services_list").select("*");
+        if (error) {
+            console.error("Failed to fetch filters:", error.message);
+        }
+
+        setServices(
+            (data ?? []).map((service) => ({
+                label: service.name,
+                value: service.id,
+            }))
+        );
+    };
+
+    const handleServiceClick = (serviceId: number) => {
+        router.navigate({
+            pathname: "/home/search-page",
+            params: { filter: serviceId },
+        });
+    };
+
     const handleBirthCenterClick = (centerId: string) => {
         router.navigate({
             pathname: "/home/clinic-page",
@@ -119,6 +151,44 @@ export default function Index() {
 
     // Get random static rating
     const getRating = () => (Math.random() * 2 + 3).toFixed(1);
+
+    const renderServiceRows = () => {
+        const rows = [];
+        const itemsPerRow = 3;
+
+        for (let i = 0; i < services.length; i += itemsPerRow) {
+            const rowItems = services.slice(i, i + itemsPerRow);
+            rows.push(
+                <View key={i} style={{ flexDirection: "row", justifyContent: "space-evenly", gap: 10 }}>
+                    {rowItems.map((service, index) => (
+                        <View
+                            key={index}
+                            style={{
+                                flexDirection: "column",
+                                alignItems: "center",
+                                gap: 10,
+                            }}
+                        >
+                            <TouchableOpacity style={styles.button} onPress={() => handleServiceClick(service.value)}>
+                                <Image style={{ width: 50, height: 50 }} source={serviceIcons[service.value]} />
+                            </TouchableOpacity>
+                            <Text
+                                style={{
+                                    fontSize: 10,
+                                    maxWidth: 100,
+                                    textAlign: "center",
+                                }}
+                            >
+                                {service.label}
+                            </Text>
+                        </View>
+                    ))}
+                </View>
+            );
+        }
+
+        return rows;
+    };
 
     return (
         <View>
@@ -198,85 +268,7 @@ export default function Index() {
                     }}
                 >
                     <Text style={{ fontSize: 17, fontWeight: "bold" }}>Services</Text>
-                    <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
-                        <View style={{ flexDirection: "column", gap: 10, alignItems: "center" }}>
-                            <TouchableOpacity style={styles.button} onPress={() => {}}>
-                                <Image
-                                    style={{
-                                        width: 50,
-                                        height: 50,
-                                    }}
-                                    source={require("@/assets/images/service-icons/family.png")}
-                                />
-                            </TouchableOpacity>
-                            <Text style={{ fontSize: 10 }}>Family Planning</Text>
-                        </View>
-
-                        <View style={{ flexDirection: "column", gap: 10, alignItems: "center" }}>
-                            <TouchableOpacity style={styles.button} onPress={() => {}}>
-                                <Image
-                                    style={{
-                                        width: 50,
-                                        height: 50,
-                                    }}
-                                    source={require("@/assets/images/service-icons/mother.png")}
-                                />
-                            </TouchableOpacity>
-                            <Text style={{ fontSize: 10 }}>Pre Natal Care</Text>
-                        </View>
-
-                        <View style={{ flexDirection: "column", gap: 10, alignItems: "center" }}>
-                            <TouchableOpacity style={styles.button} onPress={() => {}}>
-                                <Image
-                                    style={{
-                                        width: 50,
-                                        height: 50,
-                                    }}
-                                    source={require("@/assets/images/service-icons/pregnant.png")}
-                                />
-                            </TouchableOpacity>
-                            <Text style={{ fontSize: 10 }}>Delivery</Text>
-                        </View>
-                    </View>
-
-                    <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
-                        <View style={{ flexDirection: "column", gap: 10, alignItems: "center" }}>
-                            <TouchableOpacity style={styles.button} onPress={() => {}}>
-                                <Image
-                                    style={{
-                                        width: 50,
-                                        height: 50,
-                                    }}
-                                    source={require("@/assets/images/service-icons/pediatrics.png")}
-                                />
-                            </TouchableOpacity>
-                            <Text style={{ fontSize: 10 }}>Child Care</Text>
-                        </View>
-                        <View style={{ flexDirection: "column", gap: 10, alignItems: "center" }}>
-                            <TouchableOpacity style={styles.button} onPress={() => {}}>
-                                <Image
-                                    style={{
-                                        width: 50,
-                                        height: 50,
-                                    }}
-                                    source={require("@/assets/images/service-icons/baby.png")}
-                                />
-                            </TouchableOpacity>
-                            <Text style={{ fontSize: 10 }}>Post Natal Care</Text>
-                        </View>
-                        <View style={{ flexDirection: "column", gap: 10, alignItems: "center" }}>
-                            <TouchableOpacity style={styles.button} onPress={() => {}}>
-                                <Image
-                                    style={{
-                                        width: 50,
-                                        height: 50,
-                                    }}
-                                    source={require("@/assets/images/service-icons/consultation.png")}
-                                />
-                            </TouchableOpacity>
-                            <Text style={{ fontSize: 10 }}>Consultation</Text>
-                        </View>
-                    </View>
+                    {renderServiceRows()}
                 </View>
 
                 {/* Birthing Center */}
