@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { COLORS } from "@/components/constants";
+import { COLORS, SERVICE_ICONS } from "@/components/constants";
 import { Avatar, TextInput } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
@@ -9,8 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { getProfilePicture } from "@/utils/common";
 import * as Location from "expo-location";
 import { supabase } from "@/utils/supabase";
-import { getDistance, orderByDistance } from "geolib";
-import { set } from "date-fns";
+import { getDistance } from "geolib";
 
 type BirthCenter = {
     id: string;
@@ -34,14 +33,6 @@ export default function Index() {
     const [nearbyBirthCenters, setNearbyBirthCenters] = useState<BirthCenter[]>([]);
     const [services, setServices] = useState<{ label: string; value: number }[]>([]);
     const [loading, setLoading] = useState(false);
-
-    const serviceIcons: Record<string, any> = {
-        1: require("@/assets/images/service-icons/pregnant.png"),
-        2: require("@/assets/images/service-icons/pediatrics.png"),
-        3: require("@/assets/images/service-icons/baby.png"),
-        4: require("@/assets/images/service-icons/health-clinic.png"),
-        5: require("@/assets/images/service-icons/family.png"),
-    };
 
     // Set user's profile picture
     useEffect(() => {
@@ -170,7 +161,7 @@ export default function Index() {
                             }}
                         >
                             <TouchableOpacity style={styles.button} onPress={() => handleServiceClick(service.value)}>
-                                <Image style={{ width: 50, height: 50 }} source={serviceIcons[service.value]} />
+                                <Image style={{ width: 50, height: 50 }} source={SERVICE_ICONS[service.value]} />
                             </TouchableOpacity>
                             <Text
                                 style={{

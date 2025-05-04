@@ -11,3 +11,11 @@ export const COLORS = {
     success: "#4cd475", // Example: Green for success messages
     error: "#EF9A9A",
 };
+
+export const SERVICE_ICONS: Record<string, any> = {
+    1: require("@/assets/images/service-icons/pregnant.png"),
+    2: require("@/assets/images/service-icons/pediatrics.png"),
+    3: require("@/assets/images/service-icons/baby.png"),
+    4: require("@/assets/images/service-icons/health-clinic.png"),
+    5: require("@/assets/images/service-icons/family.png"),
+};
