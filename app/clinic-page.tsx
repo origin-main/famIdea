@@ -1,13 +1,14 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS, SERVICE_ICONS } from "@/components/constants";
-import { ActivityIndicator } from "react-native-paper";
+import { ActivityIndicator, Button, Divider } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "@/utils/supabase";
 import BirthCenterCard from "@/components/ui/BirthCenterCard";
 import ServiceModal from "@/components/ui/ServiceModal";
+import { getAvailabilityText } from "@/utils/common";
 
 type Service = {
     id: string;
@@ -24,8 +25,13 @@ type BirthCenter = {
     latitude?: string;
     longitude?: string;
     pictureUrl: string;
+    openingTime: string;
+    closingTime: string;
+    availableDays: string[];
     services: Service[];
 };
+
+type DayKey = "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat";
 
 export default function Index() {
     const { id } = useLocalSearchParams();
@@ -47,7 +53,7 @@ export default function Index() {
         const { data, error } = await supabase
             .from("birth_centers")
             .select(
-                `id, name, address, contact_number, description, latitude, longitude, picture_url,
+                `id, name, address, contact_number, description, latitude, longitude, picture_url, opening_time, closing_time, available_days,
                 services (
                   id,
                   service_id,
@@ -74,6 +80,9 @@ export default function Index() {
             latitude: data.latitude,
             longitude: data.longitude,
             pictureUrl: data.picture_url,
+            openingTime: data.opening_time,
+            closingTime: data.closing_time,
+            availableDays: data.available_days,
             services: data.services.map((s: any) => ({
                 id: s.id,
                 serviceId: s.services_list.id,
@@ -153,7 +162,7 @@ export default function Index() {
                 </View>
 
                 {loading ? (
-                    <ActivityIndicator style={{ flex: 1 }} color={COLORS.lightBlue} />
+                    <ActivityIndicator style={{ flex: 1, width: "100%" }} color={COLORS.lightBlue} />
                 ) : (
                     <View
                         style={{
@@ -166,11 +175,24 @@ export default function Index() {
                     >
                         <ScrollView showsVerticalScrollIndicator={false}>
                             {birthCenterData && <BirthCenterCard data={birthCenterData} disabled />}
-                            <View style={{ alignItems: "center" }}>
-                                <TouchableOpacity style={styles.loginButton} onPress={handleMessageClick}>
-                                    <Text style={styles.loginButtonText}>Message Us</Text>
-                                </TouchableOpacity>
+                            <Text style={{ paddingHorizontal: 10, paddingVertical: 5 }}>
+                                <Text style={{ fontWeight: "bold" }}>Availability: </Text>
+                                {getAvailabilityText(birthCenterData?.availableDays.map((s) => s.toLowerCase() as DayKey))}
+                            </Text>
+                            {birthCenterData?.description && (
+                                <View style={{ paddingHorizontal: 10, paddingVertical: 5 }}>
+                                    <Text style={{ fontWeight: "bold", marginBottom: 10 }}>Description</Text>
+                                    <ScrollView style={{ height: 100, padding: 10, backgroundColor: COLORS.grey, borderRadius: 5 }}>
+                                        <Text style={{ marginBottom: 10, paddingBottom: 10 }}>{birthCenterData?.description || "Description"}</Text>
+                                    </ScrollView>
+                                </View>
+                            )}
+                            <View style={{ width: "50%", alignSelf: "center", marginBottom: 5, marginTop: 10 }}>
+                                <Button mode="contained" buttonColor={COLORS.lightBlue} textColor="black" onPress={handleMessageClick}>
+                                    Message Us
+                                </Button>
                             </View>
+                            <Divider style={{ margin: 10 }}></Divider>
 
                             <View style={{ alignItems: "center" }}>
                                 <Text style={styles.title}>Our Services Include:</Text>
@@ -227,21 +249,5 @@ const styles = StyleSheet.create({
         fontSize: 15,
         textAlign: "center",
         color: "white",
-    },
-    loginButton: {
-        backgroundColor: COLORS.lightBlue,
-        paddingVertical: 12,
-        paddingHorizontal: 20,
-        borderRadius: 20,
-        alignItems: "center",
-        justifyContent: "center",
-        marginTop: 10,
-        marginBottom: 20,
-        width: 150,
-    },
-    loginButtonText: {
-        color: "black",
-        fontSize: 16,
-        fontWeight: "bold",
     },
 });

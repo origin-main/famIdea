@@ -5,6 +5,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../constants";
 import { supabase } from "@/utils/supabase";
 import { useAuth } from "@/context/AuthContext";
+import { getFormattedHours } from "@/utils/common";
+import { format } from "date-fns";
 
 type BirthCenter = {
     id: string;
@@ -16,6 +18,9 @@ type BirthCenter = {
     longitude?: string;
     pictureUrl: string;
     rating?: number;
+    openingTime: string;
+    closingTime: string;
+    availableDays: string[];
 };
 
 type Props = {
@@ -86,6 +91,9 @@ const BirthCenterCard = ({ data, onPress, disabled }: Props) => {
     // Get random static rating
     const getRating = () => (Math.random() * 2 + 3).toFixed(1);
 
+    const { hours, isOpen, isAvailableToday } = getFormattedHours(data.openingTime, data.closingTime, data.availableDays);
+    const today = format(new Date(), "EEE");
+
     return (
         <TouchableOpacity onPress={onPress} style={styles.container} disabled={disabled}>
             <IconButton
@@ -106,30 +114,27 @@ const BirthCenterCard = ({ data, onPress, disabled }: Props) => {
                         {data.name}
                     </Text>
 
-                    <Text style={styles.text}>
-                        <Text style={styles.label} numberOfLines={2}>
-                            Address:{" "}
-                        </Text>
+                    <Text style={styles.text} numberOfLines={2}>
+                        <Text style={styles.label}>Address: </Text>
                         {data.address}
                     </Text>
 
-                    <Text style={styles.text}>
-                        <Text style={styles.label} numberOfLines={1}>
-                            Hours:{" "}
-                        </Text>
-                        8:00 AM - 5:00 PM
+                    <Text style={styles.text} numberOfLines={2}>
+                        <Text style={styles.label}>Hours: </Text>
+                        {hours}
+                        {!isAvailableToday && <Text style={{ color: "red" }}> (Closed on {today})</Text>}
+                        {isAvailableToday && !isOpen && <Text style={{ color: "red" }}> (Closed now)</Text>}
                     </Text>
 
                     <Text style={styles.text}>
                         <Text style={styles.label}>Phone: </Text>
                         {data.contactNumber}
                     </Text>
-
-                    <View style={styles.rating}>
-                        <Ionicons size={15} name="star" color="gold" />
-                        <Text style={styles.ratingText}>{data.rating || getRating()}</Text>
-                    </View>
                 </View>
+            </View>
+            <View style={styles.rating}>
+                <Ionicons size={15} name="star" color="gold" />
+                <Text style={styles.ratingText}>{data.rating || getRating()}</Text>
             </View>
         </TouchableOpacity>
     );
@@ -140,7 +145,7 @@ export default BirthCenterCard;
 const styles = StyleSheet.create({
     container: {
         width: "100%",
-        height: 170,
+        height: 180,
         backgroundColor: COLORS.white,
         borderColor: "black",
         borderWidth: 1,
@@ -154,6 +159,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         height: "100%",
         alignItems: "center",
+        width: "100%",
         gap: 10,
     },
     heartIcon: {
@@ -173,6 +179,7 @@ const styles = StyleSheet.create({
         alignItems: "flex-start",
         gap: 3,
         height: "100%",
+        flex: 1,
     },
     title: {
         fontSize: 18,
@@ -182,12 +189,15 @@ const styles = StyleSheet.create({
     text: {
         fontSize: 14,
         flexWrap: "wrap",
-        width: "70%",
+        width: "90%",
     },
     label: {
         fontWeight: "bold",
     },
     rating: {
+        position: "absolute",
+        bottom: 10,
+        right: 10,
         flexDirection: "row",
         gap: 5,
     },

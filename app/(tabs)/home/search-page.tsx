@@ -21,6 +21,9 @@ type BirthCenter = {
     longitude: string;
     pictureUrl: string;
     rating: number;
+    openingTime: string;
+    closingTime: string;
+    availableDays: string[];
     services: number[];
 };
 
@@ -68,7 +71,7 @@ export default function Index() {
         setLoading(true);
         const { data: centers, error } = await supabase
             .from("birth_centers")
-            .select("id, name, address, contact_number, description, latitude, longitude, picture_url")
+            .select("id, name, address, contact_number, description, latitude, longitude, picture_url, opening_time, closing_time, available_days")
             .eq("status", "approved");
 
         if (error) {
@@ -98,6 +101,9 @@ export default function Index() {
                     latitude: center.latitude,
                     longitude: center.longitude,
                     pictureUrl: center.picture_url,
+                    openingTime: center.opening_time,
+                    closingTime: center.closing_time,
+                    availableDays: center.available_days,
                     rating: getRating(),
                     services: serviceIds?.map((service) => service.service_id as number) ?? [],
                 };
