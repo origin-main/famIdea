@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS } from "../../../components/constants";
-import { ActivityIndicator, Button, Checkbox, Divider, IconButton, Menu, TextInput } from "react-native-paper";
+import { ActivityIndicator, Checkbox, IconButton, Menu, TextInput } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
@@ -9,7 +9,7 @@ import { Dropdown } from "react-native-paper-dropdown";
 import { supabase } from "@/utils/supabase";
 import BirthCenterCard from "@/components/ui/BirthCenterCard";
 import * as Location from "expo-location";
-import { getDistance, orderByDistance } from "geolib";
+import { getDistance } from "geolib";
 
 type BirthCenter = {
     id: string;
@@ -21,6 +21,7 @@ type BirthCenter = {
     longitude: string;
     pictureUrl: string;
     rating: number;
+    services: number[];
 };
 
 export default function Index() {
@@ -31,8 +32,9 @@ export default function Index() {
     // Search, filter, sort
     const [searchValue, setSearchValue] = useState("");
     const [sortValue, setSortValue] = useState("");
-    const [filterValue, setFilterValue] = useState();
+    const [filterValue, setFilterValue] = useState(0);
     const [descChecked, setDescChecked] = useState(false);
+    const [filters, setFilters] = useState<{ label: string; value: number }[] | []>([]);
 
     const [birthCenters, setBirthCenters] = useState<BirthCenter[]>([]);
 
@@ -42,16 +44,9 @@ export default function Index() {
         { label: "Rating", value: "rating" },
     ];
 
-    const filters = [
-        { label: "Pre Natal", value: "1" },
-        { label: "Panganak", value: "2" },
-        { label: "Well Baby", value: "3" },
-        { label: "Immunization", value: "4" },
-        { label: "Family Planning", value: "5" },
-    ];
-
     useEffect(() => {
         fetchBirthCenters();
+        fetchServices();
     }, []);
 
     // Get user's current location
@@ -70,7 +65,7 @@ export default function Index() {
 
     const fetchBirthCenters = async () => {
         setLoading(true);
-        const { data, error } = await supabase
+        const { data: centers, error } = await supabase
             .from("birth_centers")
             .select("id, name, address, contact_number, description, latitude, longitude, picture_url")
             .eq("status", "approved");
@@ -81,27 +76,61 @@ export default function Index() {
             return;
         }
 
-        setBirthCenters(
-            (data as any).map((center: any) => ({
-                id: center.id,
-                name: center.name,
-                address: center.address,
-                contactNumber: center.contact_number,
-                description: center.description,
-                latitude: center.latitude,
-                longitude: center.longitude,
-                pictureUrl: center.picture_url,
-                rating: getRating(),
-            }))
+        const centersWithServices: BirthCenter[] = await Promise.all(
+            centers.map(async (center) => {
+                const { data: serviceIds, error } = await supabase
+                    .from("services")
+                    .select("service_id")
+                    .eq("birth_center_id", center.id)
+                    .eq("is_active", true);
+
+                if (error) {
+                    console.error("Failed to fetch services:", error.message);
+                }
+
+                return {
+                    id: center.id,
+                    name: center.name,
+                    address: center.address,
+                    contactNumber: center.contact_number,
+                    description: center.description,
+                    latitude: center.latitude,
+                    longitude: center.longitude,
+                    pictureUrl: center.picture_url,
+                    rating: getRating(),
+                    services: serviceIds?.map((service) => service.service_id as number) ?? [],
+                };
+            })
         );
+
+        setBirthCenters(centersWithServices);
 
         setLoading(false);
     };
 
-    // Filter birth centers based on search input
-    const filteredCenters = birthCenters.filter(
-        (center) => center.name.toLowerCase().includes(searchValue.toLowerCase()) || center.address.toLowerCase().includes(searchValue.toLowerCase())
-    );
+    const fetchServices = async () => {
+        const { data, error } = await supabase.from("services_list").select("*");
+        if (error) {
+            console.error("Failed to fetch filters:", error.message);
+        }
+
+        setFilters(
+            (data ?? []).map((service) => ({
+                label: service.name,
+                value: service.id,
+            }))
+        );
+    };
+
+    // Filter birth centers based on search input and services
+    const filteredCenters = birthCenters.filter((center) => {
+        const matchesSearch =
+            center.name.toLowerCase().includes(searchValue.toLowerCase()) || center.address.toLowerCase().includes(searchValue.toLowerCase());
+
+        const matchesService = !filterValue || center.services.includes(filterValue);
+
+        return matchesSearch && matchesService;
+    });
 
     const sortedCenters = [...filteredCenters].sort((a, b) => {
         let compareValue = 0;
@@ -135,14 +164,7 @@ export default function Index() {
     };
 
     // Get random static rating
-    const getRating = () => (Math.random() * 2 + 3).toFixed(1);
-
-    // Filter birth centers based on selected service
-    const handleFilterPress = (value : any) => {
-        // Do something with the selected filter value
-        console.log("Selected filter value:", value);
-        closeMenu();
-      };
+    const getRating = () => Number((Math.random() * 2 + 3).toFixed(1));
 
     const [visible, setVisible] = React.useState(false);
     const openMenu = () => setVisible(true);
@@ -211,21 +233,10 @@ export default function Index() {
                             onDismiss={closeMenu}
                             anchorPosition="bottom"
                             style={{ marginRight: 20 }}
-                            anchor={
-                                <IconButton
-                                    icon="filter-variant"
-                                    size={32}
-                                    iconColor="black"
-                                    onPress={openMenu}
-                                />
-                            }
+                            anchor={<IconButton icon="filter-variant" size={32} iconColor="black" onPress={openMenu} />}
                         >
                             {filters.map((filter) => (
-                                <Menu.Item
-                                    key={filter.value}
-                                    onPress={() => handleFilterPress(filter.value)}
-                                    title={filter.label}
-                                />
+                                <Menu.Item key={filter.value} onPress={() => setFilterValue(filter.value)} title={filter.label} />
                             ))}
                         </Menu>
                     </View>
