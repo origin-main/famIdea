@@ -15,6 +15,7 @@ import { useState } from "react";
 import { useRouter } from "expo-router";
 import { Calendar, CalendarList, Agenda } from "react-native-calendars";
 import { set } from "date-fns";
+import AppointmentModal from "./appointmentModals/AppointmentModal";
 
 type BirthCenter = {
   id: string;
@@ -74,6 +75,8 @@ export default function Index() {
     return (Math.random() * 2 + 3).toFixed(1);
   };
 
+  const [maternalDeliveryModalVisible, setMaternalDeliveryModalVisible] = useState<boolean>(false);
+
   return (
     <View>
       <SafeAreaView style={styles.safeArea}>
@@ -123,7 +126,9 @@ export default function Index() {
                 keyExtractor={(item, index) => index.toString()}
                 showsVerticalScrollIndicator={false}
                 renderItem={({ item }) => (
-                  <TouchableOpacity onPress={() => { }} activeOpacity={0.8}>
+                  <TouchableOpacity onPress={() => {
+                    setMaternalDeliveryModalVisible(true);
+                  }} activeOpacity={0.8}>
                     <Card style={{ width: "100%", marginBottom: 10 }}>
                       <Card.Content style={{ width: "100%" }}>
                         <View style={{ flexDirection: "row" }}>
@@ -174,7 +179,9 @@ export default function Index() {
               keyExtractor={(item, index) => index.toString()}
               showsVerticalScrollIndicator={false}
               renderItem={({ item }) => (
-                <TouchableOpacity onPress={() => { }} activeOpacity={0.8}>
+                <TouchableOpacity onPress={() => {
+                  setMaternalDeliveryModalVisible(true);
+                }} activeOpacity={0.8}>
                   <Card style={{ width: "100%", marginBottom: 10 }}>
                     <Card.Content style={{ width: "100%" }}>
                       <View style={{ flexDirection: "row" }}>
@@ -220,6 +227,7 @@ export default function Index() {
             />
           </View>}
         </View>
+        <AppointmentModal visible={maternalDeliveryModalVisible} setVisible={setMaternalDeliveryModalVisible} />
       </SafeAreaView>
     </View>
   );

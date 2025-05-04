@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS } from "../../../components/constants";
-import { ActivityIndicator, Checkbox, IconButton, Menu, TextInput } from "react-native-paper";
+import { ActivityIndicator, Button, Checkbox, Dialog, IconButton, Menu, Portal, TextInput } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -38,6 +38,7 @@ export default function Index() {
     const [filters, setFilters] = useState<{ label: string; value: number }[] | []>([]);
 
     const [birthCenters, setBirthCenters] = useState<BirthCenter[]>([]);
+    const [selectedFilters, setSelectedFilters] = useState<number[]>([]);
 
     const options = [
         { label: "Name", value: "name" },
@@ -128,7 +129,8 @@ export default function Index() {
         const matchesSearch =
             center.name.toLowerCase().includes(searchValue.toLowerCase()) || center.address.toLowerCase().includes(searchValue.toLowerCase());
 
-        const matchesService = !filterValue || center.services.includes(filterValue);
+        const matchesService =
+            selectedFilters.length === 0 || selectedFilters.some((f) => center.services.includes(f));
 
         return matchesSearch && matchesService;
     });
@@ -167,9 +169,18 @@ export default function Index() {
     // Get random static rating
     const getRating = () => Number((Math.random() * 2 + 3).toFixed(1));
 
-    const [visible, setVisible] = React.useState(false);
-    const openMenu = () => setVisible(true);
-    const closeMenu = () => setVisible(false);
+    const [filterDialogVisible, setFilterDialogVisible] = useState(false);
+
+    const openFilterDialog = () => setFilterDialogVisible(true);
+    const closeFilterDialog = () => setFilterDialogVisible(false);
+
+    const toggleFilter = (value: any) => {
+        setSelectedFilters((prev: any) =>
+            prev.includes(value)
+                ? prev.filter((v: any) => v !== value)
+                : [...prev, value]
+        );
+    };
 
     return (
         <View>
@@ -229,17 +240,40 @@ export default function Index() {
                                 <Text style={{ fontSize: 16 }}>Desc</Text>
                             </View>
                         </View>
-                        <Menu
-                            visible={visible}
-                            onDismiss={closeMenu}
-                            anchorPosition="bottom"
-                            style={{ marginRight: 20 }}
-                            anchor={<IconButton icon="filter-variant" size={32} iconColor="black" onPress={openMenu} />}
-                        >
-                            {filters.map((filter) => (
-                                <Menu.Item key={filter.value} onPress={() => setFilterValue(filter.value)} title={filter.label} />
-                            ))}
-                        </Menu>
+                        <IconButton
+                            icon="filter-variant"
+                            size={32}
+                            iconColor="black"
+                            onPress={openFilterDialog}
+                        />
+
+                        <Portal>
+                            <Dialog visible={filterDialogVisible} onDismiss={closeFilterDialog}>
+                                <Dialog.Title>Filter Services</Dialog.Title>
+                                <Dialog.ScrollArea>
+                                    <ScrollView>
+                                        {filters.map((filter) => (
+                                            <Checkbox.Item
+                                                key={filter.value}
+                                                label={filter.label}
+                                                status={selectedFilters.includes(filter.value) ? 'checked' : 'unchecked'}
+                                                onPress={() => toggleFilter(filter.value)}
+                                            />
+                                        ))}
+                                    </ScrollView>
+                                </Dialog.ScrollArea>
+                                <Dialog.Actions style={{ justifyContent: "space-between" }}>
+                                <Button
+                                        onPress={() => setSelectedFilters([])}
+                                        style={{ alignSelf: 'flex-end', marginRight: 10 }}
+                                        compact
+                                    >
+                                        Clear
+                                    </Button>
+                                    <Button style={{paddingHorizontal: 5}} mode="contained" onPress={closeFilterDialog}>Apply</Button>
+                                </Dialog.Actions>
+                            </Dialog>
+                        </Portal>
                     </View>
                 </View>
 
