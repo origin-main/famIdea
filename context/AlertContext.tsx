@@ -71,7 +71,7 @@ export const AlertProvider = ({ children }: { children: React.ReactNode }) => {
         const { count, error } = await supabase
             .from("notifications")
             .select("*", { count: "exact", head: true })
-            .eq("patient_id", user.id)
+            .eq("receiver_id", user.id)
             .eq("is_read", false);
         if (!error) setNotificationCount(count || 0);
     };
@@ -88,7 +88,7 @@ export const AlertProvider = ({ children }: { children: React.ReactNode }) => {
 
     const markNotificationsAsSeen = async () => {
         if (!user?.id || notificationCount === 0) return;
-        const { error } = await supabase.from("notifications").update({ is_read: true }).eq("patient_id", user.id).eq("is_read", false);
+        const { error } = await supabase.from("notifications").update({ is_read: true }).eq("receiver_id", user.id).eq("is_read", false);
         if (!error) setNotificationCount(0);
     };
 

@@ -9,7 +9,7 @@ import { supabase } from "@/utils/supabase";
 import { useAuth } from "@/context/AuthContext";
 import { DatePickerInput } from "react-native-paper-dates";
 import { COLORS } from "@/components/constants";
-import { formatDateToYMD, getProfilePicture } from "@/utils/common";
+import { formatDateToYMD, getPicture } from "@/utils/common";
 
 type PatientInfo = {
     firstName: string;
@@ -65,7 +65,7 @@ export default function Index() {
             getInitialFormData();
 
             if (user?.profile?.profile_picture_url) {
-                const url = getProfilePicture(user?.profile?.profile_picture_url);
+                const url = getPicture(user?.profile?.profile_picture_url);
                 setImageUrl(url);
             }
         }
@@ -157,7 +157,6 @@ export default function Index() {
             // 1. Upload new image if there is one
             let uploadedImagePath: string | undefined;
             if (newImage) {
-                console.log(1);
                 const response = await fetch(newImage.uri);
                 const arrayBuffer = await response.arrayBuffer();
                 const bytes = new Uint8Array(arrayBuffer);
@@ -181,28 +180,28 @@ export default function Index() {
                     throw uploadError;
                 }
 
-                uploadedImagePath = data.path;
-
-                console.log("Image uploaded! File path:", uploadedImagePath);
+                uploadedImagePath = `https://mseufnqrzgiqjrxwvwvh.supabase.co/storage/v1/object/public/profile-pictures/${data.path}`;
             }
             // 1.1 Delete photo from db and storage if marked for deletion
             else if (markedForDeletion && user?.profile?.profile_picture_url) {
-                console.log("1.1");
                 const imagePath = user.profile.profile_picture_url;
+                const fileName = imagePath.split("/").pop();
 
-                const { error: storageError } = await supabase.storage.from("profile-pictures").remove([imagePath]);
+                if (fileName) {
+                    const { error: storageError } = await supabase.storage.from("profile-pictures").remove([fileName]);
 
-                if (storageError) {
-                    throw storageError;
+                    if (storageError) {
+                        throw storageError;
+                    }
+
+                    const { error: dbError } = await supabase.from("patients").update({ profile_picture_url: null }).eq("id", user.id);
+
+                    if (dbError) {
+                        throw dbError;
+                    }
+
+                    console.log("Profile picture deleted successfully.");
                 }
-
-                const { error: dbError } = await supabase.from("patients").update({ profile_picture_url: null }).eq("id", user.id);
-
-                if (dbError) {
-                    throw dbError;
-                }
-
-                console.log("Profile picture deleted successfully.");
             }
 
             // 2. Update patients table

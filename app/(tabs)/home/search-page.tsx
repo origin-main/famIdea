@@ -10,6 +10,7 @@ import { supabase } from "@/utils/supabase";
 import BirthCenterCard from "@/components/ui/BirthCenterCard";
 import * as Location from "expo-location";
 import { getDistance } from "geolib";
+import { getPicture } from "@/utils/common";
 
 type BirthCenter = {
     id: string;
@@ -19,7 +20,7 @@ type BirthCenter = {
     description?: string;
     latitude: string;
     longitude: string;
-    pictureUrl: string;
+    pictureUrl: string | null;
     rating: number;
     openingTime: string;
     closingTime: string;
@@ -100,7 +101,7 @@ export default function Index() {
                     description: center.description,
                     latitude: center.latitude,
                     longitude: center.longitude,
-                    pictureUrl: center.picture_url,
+                    pictureUrl: getPicture(center.picture_url),
                     openingTime: center.opening_time,
                     closingTime: center.closing_time,
                     availableDays: center.available_days,
@@ -164,7 +165,7 @@ export default function Index() {
     });
 
     const handleCardClick = (centerId: string) => {
-        router.navigate({
+        router.push({
             pathname: "/clinic-page",
             params: { id: centerId },
         });

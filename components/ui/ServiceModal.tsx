@@ -70,8 +70,9 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ id, visible, setVisible }) 
     };
 
     const handleScheduleClick = () => {
-        router.navigate({
-            pathname: "/home/schedule-appointment",
+        setVisible(false);
+        router.push({
+            pathname: "/schedule-appointment",
             params: { serviceId: service?.id },
         });
     };

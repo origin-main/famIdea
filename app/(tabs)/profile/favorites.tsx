@@ -1,20 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Image, Text, ImageBackground, FlatList, TouchableOpacity, RefreshControl } from "react-native";
+import { View, Image, Text, ImageBackground, FlatList, TouchableOpacity, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { COLORS } from "@/components/constants";
-import { ActivityIndicator, Card, IconButton } from "react-native-paper";
+import { ActivityIndicator, Card } from "react-native-paper";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/utils/supabase";
-import { ScrollView } from "react-native-reanimated/lib/typescript/Animated";
-import { set } from "date-fns";
 import { router } from "expo-router";
+import { getPicture } from "@/utils/common";
 
 type BirthCenter = {
     id: string;
     name: string;
     address: string;
-    pictureUrl: string;
+    pictureUrl: string | null;
 };
 
 export default function Index() {
@@ -41,12 +40,11 @@ export default function Index() {
         if (error) {
             console.error("Error fetching preferred birth centers:", error);
         } else {
-            // @ts-ignore
             const birthCenters = data?.map((item: any) => ({
                 id: item.birth_center.id,
                 name: item.birth_center.name,
                 address: item.birth_center.address,
-                pictureUrl: item.birth_center.picture_url,
+                pictureUrl: getPicture(item.birth_center.picture_url),
             }));
 
             setFavorites(birthCenters);

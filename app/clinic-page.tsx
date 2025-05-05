@@ -8,7 +8,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "@/utils/supabase";
 import BirthCenterCard from "@/components/ui/BirthCenterCard";
 import ServiceModal from "@/components/ui/ServiceModal";
-import { getAvailabilityText } from "@/utils/common";
+import { getAvailabilityText, getPicture } from "@/utils/common";
 
 type Service = {
     id: string;
@@ -24,7 +24,7 @@ type BirthCenter = {
     description?: string;
     latitude?: string;
     longitude?: string;
-    pictureUrl: string;
+    pictureUrl: string | null;
     openingTime: string;
     closingTime: string;
     availableDays: string[];
@@ -79,7 +79,7 @@ export default function Index() {
             description: data.description,
             latitude: data.latitude,
             longitude: data.longitude,
-            pictureUrl: data.picture_url,
+            pictureUrl: getPicture(data.picture_url),
             openingTime: data.opening_time,
             closingTime: data.closing_time,
             availableDays: data.available_days,
@@ -94,7 +94,7 @@ export default function Index() {
     };
 
     const handleMessageClick = () => {
-        router.navigate({
+        router.push({
             pathname: "/chat",
             params: { birthCenterId: birthCenterData?.id, name: birthCenterData?.name },
         });

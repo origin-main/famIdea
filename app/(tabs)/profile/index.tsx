@@ -7,7 +7,7 @@ import { Avatar } from "react-native-paper";
 import { supabase } from "@/utils/supabase";
 import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
-import { getProfilePicture } from "@/utils/common";
+import { getPicture } from "@/utils/common";
 
 export default function Index() {
     const router = useRouter();
@@ -16,12 +16,12 @@ export default function Index() {
 
     useEffect(() => {
         if (user?.profile?.profile_picture_url) {
-            const url = getProfilePicture(user?.profile?.profile_picture_url);
+            const url = getPicture(user?.profile?.profile_picture_url);
             setProfilePicture(url);
         } else {
             setProfilePicture(null);
         }
-    }, [user?.profile?.profile_picture_url]);
+    }, [user?.profile]);
 
     const handleLogout = async () => {
         try {

@@ -8,13 +8,14 @@ import { supabase } from "@/utils/supabase";
 import { useAuth } from "@/context/AuthContext";
 import { formatDistanceToNow } from "date-fns";
 import { useAlert } from "@/context/AlertContext";
+import { getPicture } from "@/utils/common";
 
 type Chat = {
     birth_center_id: string;
     latest_message: string;
     latest_message_time: string;
     name: string;
-    picture_url: string;
+    picture_url: string | null;
     receiver_id: string;
     sender_id: string;
     unread_count: number;
@@ -62,14 +63,21 @@ export default function Index() {
         if (error) {
             console.error("Failed to fetch latest chats:", error.message);
         } else {
-            setChatList(data);
+            setChatList(
+                data.map((chat: any) => {
+                    return {
+                        ...chat,
+                        picture_url: getPicture(chat.picture_url),
+                    };
+                })
+            );
         }
 
         setLoading(false);
     };
 
     const handleMessageClick = (item: Chat) => {
-        router.navigate({
+        router.push({
             pathname: "/chat",
             params: { birthCenterId: item?.birth_center_id, name: item?.name },
         });

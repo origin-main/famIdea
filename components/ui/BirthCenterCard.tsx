@@ -16,7 +16,7 @@ type BirthCenter = {
     description?: string;
     latitude?: string;
     longitude?: string;
-    pictureUrl: string;
+    pictureUrl: string | null;
     rating?: number;
     openingTime: string;
     closingTime: string;

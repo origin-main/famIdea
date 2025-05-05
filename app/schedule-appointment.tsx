@@ -7,6 +7,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Calendar } from "react-native-calendars";
 import { supabase } from "@/utils/supabase";
 import AppointmentModal from "@/components/ui/AppointmentModal";
+import { getPicture } from "@/utils/common";
 
 type Service = {
     id: string;
@@ -19,7 +20,7 @@ type Service = {
     birthCenter: {
         name: string;
         address: string;
-        pictureUrl: string;
+        pictureUrl: string | null;
     };
 };
 
@@ -73,7 +74,7 @@ export default function Index() {
             birthCenter: {
                 name: serviceData.birth_centers.name,
                 address: serviceData.birth_centers.address,
-                pictureUrl: serviceData.birth_centers.picture_url,
+                pictureUrl: getPicture(serviceData.birth_centers.picture_url),
             },
         });
     };
@@ -173,8 +174,13 @@ export default function Index() {
                                     backgroundColor: COLORS.lightBlue,
                                     objectFit: "fill",
                                     margin: 5,
+                                    borderRadius: 10,
                                 }}
-                                source={service?.birthCenter.pictureUrl || require("@/assets/images/service-icons/health-clinic.png")}
+                                source={
+                                    service?.birthCenter.pictureUrl
+                                        ? { uri: service?.birthCenter.pictureUrl }
+                                        : require("@/assets/images/service-icons/health-clinic.png")
+                                }
                             />
                             {/* Clinic Details */}
                             <View style={{ gap: 3, width: "50%" }}>

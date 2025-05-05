@@ -1,6 +1,6 @@
 import { COLORS, SERVICE_ICONS } from "@/components/constants";
 import { useAuth } from "@/context/AuthContext";
-import { addNotification } from "@/utils/common";
+import { addNotification, getPicture } from "@/utils/common";
 import { supabase } from "@/utils/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -26,7 +26,7 @@ type Service = {
     birthCenter: {
         name: string;
         address: string;
-        pictureUrl: string;
+        pictureUrl: string | null;
     };
 };
 
@@ -78,7 +78,7 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({ id, visible, setVis
             birthCenter: {
                 name: serviceData.birth_centers.name,
                 address: serviceData.birth_centers.address,
-                pictureUrl: serviceData.birth_centers.picture_url,
+                pictureUrl: getPicture(serviceData.birth_centers.picture_url),
             },
         });
 
@@ -138,7 +138,11 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({ id, visible, setVis
                         <View style={styles.imageContainer}>
                             <Image
                                 style={styles.image}
-                                source={service?.birthCenter.pictureUrl || require("@/assets/images/service-icons/health-clinic.png")}
+                                source={
+                                    service?.birthCenter.pictureUrl
+                                        ? { uri: service.birthCenter.pictureUrl }
+                                        : require("@/assets/images/service-icons/health-clinic.png")
+                                }
                             />
                         </View>
                         <Text style={{ fontWeight: "bold", maxWidth: 150, textAlign: "center" }}>{service?.birthCenter.name || "Name"}</Text>
@@ -219,13 +223,13 @@ const styles = StyleSheet.create({
         minHeight: 500,
     },
     image: {
-        width: 50,
-        height: 50,
+        width: "100%",
+        height: "100%",
+        resizeMode: "cover",
+        borderRadius: 10,
     },
     imageContainer: {
         backgroundColor: COLORS.lightBlue,
-        paddingVertical: 10,
-        paddingHorizontal: 10,
         borderRadius: 10,
         alignItems: "center",
         justifyContent: "center",

@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/utils/supabase";
 import { useAuth } from "@/context/AuthContext";
 import { router } from "expo-router";
+import { getPicture } from "@/utils/common";
 
 type Appointment = {
     id: string;
@@ -16,7 +17,7 @@ type Appointment = {
         id: string;
         name: string;
         address: string;
-        pictureUrl: string;
+        pictureUrl: string | null;
     };
 };
 
@@ -57,7 +58,7 @@ export default function Index() {
                     id: appt.birth_centers.id,
                     name: appt.birth_centers.name,
                     address: appt.birth_centers.address,
-                    pictureUrl: appt.birth_centers.picture_url,
+                    pictureUrl: getPicture(appt.birth_centers.picture_url),
                 },
             }));
 
@@ -85,7 +86,7 @@ export default function Index() {
     };
 
     const handleApptClick = (id: string) => {
-        router.navigate({
+        router.push({
             pathname: "/appointment/appointment-details",
             params: { id: id },
         });

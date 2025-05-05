@@ -9,7 +9,7 @@ import { supabase } from "@/utils/supabase";
 import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "@/context/AuthContext";
 import { COLORS } from "@/components/constants";
-import { formatDateToYMD, getProfilePicture } from "@/utils/common";
+import { formatDateToYMD, getPicture } from "@/utils/common";
 
 type ChildInfo = {
     firstName: string;
@@ -102,7 +102,7 @@ export default function Index() {
             });
 
             if (data.profile_picture_url) {
-                const url = getProfilePicture(data.profile_picture_url);
+                const url = getPicture(data.profile_picture_url);
                 setImageUrl(url);
             }
         } catch (error: any) {
@@ -187,7 +187,7 @@ export default function Index() {
                     throw uploadError;
                 }
 
-                uploadedImagePath = data.path;
+                uploadedImagePath = `https://mseufnqrzgiqjrxwvwvh.supabase.co/storage/v1/object/public/profile-pictures/${data.path}`;
 
                 console.log("Image uploaded! File path:", uploadedImagePath);
             }
@@ -248,7 +248,7 @@ export default function Index() {
 
             // Refresh image
             if (uploadedImagePath) {
-                const url = getProfilePicture(uploadedImagePath);
+                const url = getPicture(uploadedImagePath);
                 setImageUrl(url);
             }
         } catch (error: any) {

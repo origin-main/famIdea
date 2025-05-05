@@ -6,7 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { router } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
-import { getProfilePicture } from "@/utils/common";
+import { getPicture } from "@/utils/common";
 import * as Location from "expo-location";
 import { supabase } from "@/utils/supabase";
 import { getDistance } from "geolib";
@@ -20,7 +20,7 @@ type BirthCenter = {
     description?: string;
     latitude?: string;
     longitude?: string;
-    pictureUrl: string;
+    pictureUrl: string | null;
     distance?: number;
 };
 
@@ -39,12 +39,12 @@ export default function Index() {
     // Set user's profile picture
     useEffect(() => {
         if (user?.profile?.profile_picture_url) {
-            const url = getProfilePicture(user?.profile?.profile_picture_url);
+            const url = getPicture(user?.profile?.profile_picture_url);
             setProfilePicture(url);
         } else {
             setProfilePicture(null);
         }
-    }, [user?.profile?.profile_picture_url]);
+    }, [user?.profile]);
 
     // Get user's current location
     useEffect(() => {
@@ -92,7 +92,7 @@ export default function Index() {
                 description: center.description,
                 latitude: center.latitude,
                 longitude: center.longitude,
-                pictureUrl: center.picture_url,
+                pictureUrl: getPicture(center.picture_url),
             }));
 
         const searchWithinRadius = (radiusMeters: number) => {
@@ -142,14 +142,14 @@ export default function Index() {
     };
 
     const handleServiceClick = (serviceId: number) => {
-        router.navigate({
+        router.push({
             pathname: "/home/search-page",
             params: { filter: serviceId },
         });
     };
 
     const handleBirthCenterClick = (centerId: string) => {
-        router.navigate({
+        router.push({
             pathname: "/clinic-page",
             params: { id: centerId },
         });
@@ -333,7 +333,7 @@ export default function Index() {
                                                 width: "90%",
                                                 height: "70%",
                                                 backgroundColor: COLORS.lightBlue,
-                                                objectFit: "fill",
+                                                objectFit: "cover",
                                                 margin: 5,
                                             }}
                                             source={

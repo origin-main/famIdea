@@ -79,17 +79,9 @@ export const getAvailabilityText = (availableDays: DayKey[] | undefined): string
 };
 
 // supabase functions
-export const getProfilePicture = (path: string): string | null => {
-    try {
-        const { data } = supabase.storage.from("profile-pictures").getPublicUrl(path);
-
-        // Bust the cache by appending a timestamp to the URL to force refresh
-        const urlWithCacheBusting = `${data.publicUrl}?t=${Date.now()}`;
-        return urlWithCacheBusting;
-    } catch (error: any) {
-        console.error("Error fetching image: ", error.message);
-        return null;
-    }
+export const getPicture = (path: string): string | null => {
+    if (!path) return null;
+    return `${path}?t=${Date.now()}`;
 };
 
 export const addNotification = async ({

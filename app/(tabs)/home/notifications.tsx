@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { formatDistanceToNow } from "date-fns";
 import { router } from "expo-router";
 import { useAlert } from "@/context/AlertContext";
+import { getPicture } from "@/utils/common";
 
 export type Notification = {
     id: number;
@@ -86,7 +87,7 @@ export default function Notifications() {
                     ? {
                           id: n.birth_centers.id,
                           name: n.birth_centers.name,
-                          pictureUrl: n.birth_centers.picture_url,
+                          pictureUrl: getPicture(n.birth_centers.picture_url),
                       }
                     : null,
             }));
@@ -153,7 +154,11 @@ export default function Notifications() {
                                                 marginRight: 20,
                                                 borderRadius: 50,
                                             }}
-                                            source={item.birthCenter?.pictureUrl || require("@/assets/images/service-icons/health-clinic.png")}
+                                            source={
+                                                item.birthCenter?.pictureUrl
+                                                    ? { uri: item.birthCenter.pictureUrl }
+                                                    : require("@/assets/images/service-icons/health-clinic.png")
+                                            }
                                         />
                                         <View style={{ gap: 5, flex: 1 }}>
                                             <Text style={{ fontWeight: "bold" }}>{item.title}</Text>

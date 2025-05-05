@@ -1,6 +1,6 @@
 import { COLORS } from "@/components/constants";
 import { useAuth } from "@/context/AuthContext";
-import { addNotification } from "@/utils/common";
+import { addNotification, getPicture } from "@/utils/common";
 import { supabase } from "@/utils/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
@@ -24,7 +24,7 @@ type Appointment = {
         id: string;
         name: string;
         address: string;
-        pictureUrl: string;
+        pictureUrl: string | null;
     };
 };
 
@@ -73,7 +73,7 @@ const AppointmentDetails = () => {
                     id: apptData.birth_centers.id,
                     name: apptData.birth_centers.name,
                     address: apptData.birth_centers.address,
-                    pictureUrl: apptData.birth_centers.picture_url,
+                    pictureUrl: getPicture(apptData.birth_centers.picture_url),
                 },
             };
 
@@ -122,7 +122,7 @@ const AppointmentDetails = () => {
 
     const handleMessageClick = () => {
         if (!appointment) return;
-        router.navigate({
+        router.push({
             pathname: "/chat",
             params: { birthCenterId: appointment.birthCenter.id, name: appointment.birthCenter.name },
         });
@@ -146,7 +146,11 @@ const AppointmentDetails = () => {
                         <View style={styles.imageContainer}>
                             <Image
                                 style={styles.image}
-                                source={appointment?.birthCenter.pictureUrl || require("@/assets/images/service-icons/health-clinic.png")}
+                                source={
+                                    appointment?.birthCenter.pictureUrl
+                                        ? { uri: appointment.birthCenter.pictureUrl }
+                                        : require("@/assets/images/service-icons/health-clinic.png")
+                                }
                             />
                         </View>
 
@@ -250,11 +254,10 @@ const styles = StyleSheet.create({
         width: "100%",
         height: "100%",
         resizeMode: "cover",
+        borderRadius: 10,
     },
     imageContainer: {
         backgroundColor: COLORS.lightBlue,
-        paddingVertical: 10,
-        paddingHorizontal: 10,
         borderRadius: 10,
         alignItems: "center",
         justifyContent: "center",
