@@ -85,6 +85,7 @@ export default function Index() {
                     email: formData.email,
                     password: formData.password,
                     options: {
+                        emailRedirectTo: "myapp://confirmation-success-page",
                         data: {
                             user_type: "patient",
                         },
@@ -117,18 +118,11 @@ export default function Index() {
                 ]);
 
                 if (patientError) {
+                    if (patientError.code === "23503") {
+                        alert("Email already exists. Please use a different email.");
+                    }
+
                     throw new Error(`Insert profile error: ${patientError.message}`);
-                }
-
-                // Insert into child_info
-                const { error: childInfoError } = await supabase.from("child_info").insert([
-                    {
-                        id: userId,
-                    },
-                ]);
-
-                if (childInfoError) {
-                    throw new Error(`Insert child_info error: ${childInfoError.message}`);
                 }
 
                 alert("Account created successfully!");
@@ -161,18 +155,19 @@ export default function Index() {
             resizeMode="cover"
         >
             <SafeAreaView style={{ width: "100%", alignItems: "center" }}>
-                <ScrollView
-                    contentContainerStyle={{
-                        flexGrow: 1,
-                        alignItems: "center",
-                        paddingVertical: 10,
-                    }}
-                    showsVerticalScrollIndicator={false}
-                >
-                    <Text style={styles.title}>Create Your Account</Text>
-                    {loading ? (
-                        <ActivityIndicator style={{ flex: 1 }} color={COLORS.lightBlue} />
-                    ) : (
+                {loading ? (
+                    <ActivityIndicator style={{ flex: 1 }} color={COLORS.lightBlue} />
+                ) : (
+                    <ScrollView
+                        contentContainerStyle={{
+                            flexGrow: 1,
+                            alignItems: "center",
+                            paddingVertical: 10,
+                        }}
+                        showsVerticalScrollIndicator={false}
+                    >
+                        <Text style={styles.title}>Create Your Account</Text>
+
                         <View style={styles.container}>
                             <TextInput
                                 mode="outlined"
@@ -351,27 +346,27 @@ export default function Index() {
                             />
                             {passwordError ? <Text style={{ color: "red" }}>{passwordError}</Text> : null}
                         </View>
-                    )}
 
-                    <TouchableOpacity style={styles.button} onPress={() => handleSignUp()}>
-                        <Text style={styles.buttonText}>Sign Up</Text>
-                    </TouchableOpacity>
-                    <View style={{ flexDirection: "row", alignItems: "center" }}>
-                        <Text style={{ padding: 5 }}>Already have an account?</Text>
-                        <Text
-                            style={{
-                                padding: 5,
-                                textDecorationLine: "underline",
-                                color: "blue",
-                            }}
-                            onPress={() => {
-                                router.push("/");
-                            }}
-                        >
-                            Login
-                        </Text>
-                    </View>
-                </ScrollView>
+                        <TouchableOpacity style={styles.button} onPress={() => handleSignUp()}>
+                            <Text style={styles.buttonText}>Sign Up</Text>
+                        </TouchableOpacity>
+                        <View style={{ flexDirection: "row", alignItems: "center" }}>
+                            <Text style={{ padding: 5 }}>Already have an account?</Text>
+                            <Text
+                                style={{
+                                    padding: 5,
+                                    textDecorationLine: "underline",
+                                    color: "blue",
+                                }}
+                                onPress={() => {
+                                    router.push("/");
+                                }}
+                            >
+                                Login
+                            </Text>
+                        </View>
+                    </ScrollView>
+                )}
             </SafeAreaView>
         </ImageBackground>
     );

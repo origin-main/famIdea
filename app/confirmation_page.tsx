@@ -35,6 +35,9 @@ export default function Index() {
         const { error } = await supabase.auth.resend({
             type: "signup",
             email: email as string,
+            options: {
+                emailRedirectTo: "myapp://confirmation-success-page",
+            },
         });
         if (error) {
             console.error("Error resending email:", error.message);

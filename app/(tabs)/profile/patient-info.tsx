@@ -2,7 +2,7 @@ import { StyleSheet, Text, TouchableOpacity, View, Image, ScrollView, Alert } fr
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { ActivityIndicator, Avatar, Button, TextInput } from "react-native-paper";
+import { ActivityIndicator, Avatar, Button, RadioButton, TextInput } from "react-native-paper";
 import { useState, useEffect } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { supabase } from "@/utils/supabase";
@@ -10,12 +10,15 @@ import { useAuth } from "@/context/AuthContext";
 import { DatePickerInput } from "react-native-paper-dates";
 import { COLORS } from "@/components/constants";
 import { formatDateToYMD, getPicture } from "@/utils/common";
+import { Dropdown } from "react-native-paper-dropdown";
 
 type PatientInfo = {
     firstName: string;
     middleName: string;
     lastName: string;
     dateOfBirth: Date | undefined;
+    age: number;
+    sex: string;
     address: string;
     phoneNumber: string;
     emergencyContact: string;
@@ -39,6 +42,8 @@ export default function Index() {
         middleName: "",
         lastName: "",
         dateOfBirth: undefined,
+        age: 0,
+        sex: "",
         address: "",
         phoneNumber: "",
         emergencyContact: "",
@@ -60,6 +65,12 @@ export default function Index() {
         mimeType?: string;
     } | null>(null);
 
+    // for dropdown
+    const options = [
+        { label: "Male", value: "male" },
+        { label: "Female", value: "female" },
+    ];
+
     useEffect(() => {
         if (user) {
             getInitialFormData();
@@ -77,6 +88,8 @@ export default function Index() {
             middleName: user?.profile?.middle_name || "",
             lastName: user?.profile?.last_name || "",
             dateOfBirth: user?.profile?.birthday ? new Date(user?.profile?.birthday) : undefined,
+            age: user?.profile?.age || 0,
+            sex: user?.profile?.sex || "",
             address: user?.profile?.address || "",
             phoneNumber: user?.profile?.contact_number || "",
             emergencyContact: user?.profile?.emergency_contact || "",
@@ -212,6 +225,8 @@ export default function Index() {
                     middle_name: formData.middleName,
                     last_name: formData.lastName,
                     birthday: formatDateToYMD(formData.dateOfBirth),
+                    age: formData.age,
+                    sex: formData.sex,
                     address: formData.address,
                     contact_number: formData.phoneNumber,
                     emergency_contact: formData.emergencyContact,
@@ -396,6 +411,36 @@ export default function Index() {
                                 </View>
                             </View>
 
+                            {/* Age  */}
+                            <View style={styles.infoRow}>
+                                <Text style={styles.infoLabel}>Age:</Text>
+                                <TextInput
+                                    style={[styles.infoText, { backgroundColor: !formData.age ? COLORS.error : undefined }]}
+                                    mode="outlined"
+                                    dense={true}
+                                    value={formData.age == 0 ? "" : formData.age.toString()}
+                                    onChangeText={(value) => setFormData({ ...formData, age: value ? parseInt(value) || 0 : 0 })}
+                                    keyboardType="numeric"
+                                    maxLength={3}
+                                ></TextInput>
+                            </View>
+
+                            {/* Sex  */}
+                            <View style={styles.infoRow}>
+                                <Text style={styles.infoLabel}>Sex:</Text>
+                                <RadioButton.Group onValueChange={(value) => setFormData({ ...formData, sex: value })} value={formData.sex}>
+                                    <View style={{ flexDirection: "row", alignItems: "center" }}>
+                                        <View style={{ flexDirection: "row", alignItems: "center", marginRight: 16 }}>
+                                            <RadioButton value="female" />
+                                            <Text style={{ fontSize: 12 }}>Female</Text>
+                                        </View>
+                                        <View style={{ flexDirection: "row", alignItems: "center" }}>
+                                            <RadioButton value="male" />
+                                            <Text style={{ fontSize: 12 }}>Male</Text>
+                                        </View>
+                                    </View>
+                                </RadioButton.Group>
+                            </View>
                             {/* Address  */}
                             <View style={styles.infoRow}>
                                 <Text style={styles.infoLabel}>Address:</Text>
@@ -417,6 +462,8 @@ export default function Index() {
                                     dense={true}
                                     value={formData.phoneNumber}
                                     onChangeText={(value) => setFormData({ ...formData, phoneNumber: value })}
+                                    maxLength={11}
+                                    keyboardType="numeric"
                                 ></TextInput>
                             </View>
 
@@ -441,6 +488,8 @@ export default function Index() {
                                     dense={true}
                                     value={formData.emergencyContactNumber}
                                     onChangeText={(value) => setFormData({ ...formData, emergencyContactNumber: value })}
+                                    maxLength={11}
+                                    keyboardType="numeric"
                                 ></TextInput>
                             </View>
                         </View>

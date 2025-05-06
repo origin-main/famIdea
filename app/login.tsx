@@ -7,7 +7,6 @@ import { COLORS } from "@/components/constants";
 import { supabase } from "@/utils/supabase";
 
 export default function Index() {
-    const [username, setUsername] = React.useState("");
     const [email, setEmail] = React.useState("");
     const [password, setPassword] = React.useState("");
 
@@ -85,7 +84,7 @@ export default function Index() {
                 </TouchableOpacity>
                 <Text
                     onPress={() => {
-                        alert("clicked");
+                        router.push("/forgot-password");
                     }}
                     style={{ padding: 10, textDecorationLine: "underline" }}
                 >

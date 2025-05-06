@@ -1,7 +1,7 @@
 import { StyleSheet, Text, TouchableOpacity, View, ScrollView, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { ActivityIndicator, Avatar, Button, TextInput } from "react-native-paper";
 import { useEffect, useState } from "react";
 import { DatePickerInput } from "react-native-paper-dates";
@@ -34,6 +34,7 @@ type ChildInfo = {
 };
 
 export default function Index() {
+    const { id } = useLocalSearchParams();
     const router = useRouter();
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
@@ -73,7 +74,7 @@ export default function Index() {
     const getInitialFormData = async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase.from("child_info").select("*").eq("id", user?.id).single();
+            const { data, error } = await supabase.from("child_info").select("*").eq("id", id).single();
 
             if (error) {
                 throw new Error(error.message);
@@ -176,7 +177,7 @@ export default function Index() {
                 }
 
                 // Force the extension to be 'jpeg'
-                const fileName = `${user.id}-child.jpeg`;
+                const fileName = `${id}-child.jpeg`;
 
                 const { data, error: uploadError } = await supabase.storage.from("profile-pictures").upload(fileName, bytes, {
                     contentType: "image/jpeg", // Force JPEG content type
@@ -195,20 +196,23 @@ export default function Index() {
             // 1.1 Delete photo from db and storage if marked for deletion
             else if (markedForDeletion && formData.profilePicture) {
                 const imagePath = formData.profilePicture;
+                const fileName = imagePath.split("/").pop();
 
-                const { error: storageError } = await supabase.storage.from("profile-pictures").remove([imagePath]);
+                if (fileName) {
+                    const { error: storageError } = await supabase.storage.from("profile-pictures").remove([fileName]);
 
-                if (storageError) {
-                    throw storageError;
+                    if (storageError) {
+                        throw storageError;
+                    }
+
+                    const { error: dbError } = await supabase.from("child_info").update({ profile_picture_url: null }).eq("id", id);
+
+                    if (dbError) {
+                        throw dbError;
+                    }
+
+                    console.log("Profile picture deleted successfully.");
                 }
-
-                const { error: dbError } = await supabase.from("child_info").update({ profile_picture_url: null }).eq("id", user.id);
-
-                if (dbError) {
-                    throw dbError;
-                }
-
-                console.log("Profile picture deleted successfully.");
             }
 
             // 2. Update child_info table
@@ -235,7 +239,7 @@ export default function Index() {
                     other_info: formData.otherRelevantInfo,
                     ...(uploadedImagePath ? { profile_picture_url: uploadedImagePath } : {}), // Only update image if uploaded
                 })
-                .eq("id", user?.id);
+                .eq("id", id);
 
             if (childInfoError) {
                 throw new Error(`Failed to update child info: ${childInfoError?.message}`);
@@ -267,7 +271,7 @@ export default function Index() {
                         <Ionicons name="chevron-back" size={24} color="black" />
                     </TouchableOpacity>
                 </View>
-                <Text style={styles.title}>Patient Info</Text>
+                <Text style={styles.title}>Child Info</Text>
             </View>
 
             <ScrollView
