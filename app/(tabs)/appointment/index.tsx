@@ -1,13 +1,15 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity, FlatList, RefreshControl } from "react-native";
+import { StyleSheet, Text, View, Image, TouchableOpacity, FlatList, RefreshControl, ScrollView, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS } from "@/components/constants";
-import { ActivityIndicator, Card } from "react-native-paper";
+import { ActivityIndicator, Button, Card } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { supabase } from "@/utils/supabase";
 import { useAuth } from "@/context/AuthContext";
 import { router } from "expo-router";
 import { getPicture } from "@/utils/common";
+import { Dialog } from '@rneui/themed';
+import { Rating } from 'react-native-ratings';
 
 type Appointment = {
     id: string;
@@ -28,7 +30,22 @@ export default function Index() {
     const [loading, setLoading] = useState(false);
     const [appointments, setAppointments] = useState<Appointment[]>([]);
 
-    const BUTTONS = ["Active", "Pending", "History"];
+    const [visible, setVisible] = useState(false);
+    const [rating, setRating] = useState(0);
+
+    const showDialog = () => setVisible(true);
+    const hideDialog = () => setVisible(false);
+
+    const handleRatingCompleted = (value: number) => {
+        setRating(value);
+    };
+
+    const handleSubmit = () => {
+        Alert.alert('Thanks for rating!', `You rated ${rating} stars.`);
+        hideDialog();
+    };
+
+    const BUTTONS = ["Active", "Pending", "History", "Completed"];
 
     useEffect(() => {
         fetchAppointments();
@@ -75,9 +92,12 @@ export default function Index() {
         } else if (active === 1) {
             // "Pending" - only pending
             return appt.status === "pending";
-        } else {
+        } else if (active === 2) {
             // "History" - all statuses except approved and pending
             return appt.status !== "approved" && appt.status !== "pending";
+        } else {
+            // "Completed" - only completed
+            return appt.status == "completed";
         }
     });
 
@@ -109,18 +129,29 @@ export default function Index() {
                         paddingHorizontal: 20,
                     }}
                 >
-                    {BUTTONS.map((button, index) => (
-                        <TouchableOpacity
-                            key={index}
-                            style={[styles.button, active === index && styles.active]}
-                            onPress={() => {
-                                setActive(index);
-                            }}
-                        >
-                            <Text style={[active === index && { color: COLORS.white }]}>{button}</Text>
-                        </TouchableOpacity>
-                    ))}
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                        }}
+                    >
+                        {BUTTONS.map((button, index) => (
+                            <TouchableOpacity
+                                key={index}
+                                style={[styles.button, active === index && styles.active]}
+                                onPress={() => {
+                                    setActive(index);
+                                }}
+                            >
+                                <Text style={[active === index && { color: COLORS.white }]}>{button}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
                 </View>
+
                 <View
                     style={{
                         width: "100%",
@@ -180,8 +211,17 @@ export default function Index() {
                                             </View>
 
                                             <View style={styles.rating}>
-                                                <Text>{getRating()}</Text>
-                                                <Ionicons name="star" size={15} color="gold" />
+                                                {
+                                                    //change null to getRating() to only show button when rating is null
+                                                    null == null && active === 3 ? (
+                                                        <Button mode="contained-tonal" onPress={showDialog}>Rate</Button>
+                                                    ) : (
+                                                        <>
+                                                            <Text>{getRating()}</Text>
+                                                            <Ionicons name="star" size={15} color="gold" />
+                                                        </>
+                                                    )
+                                                }
                                             </View>
                                         </Card.Content>
                                     </Card>
@@ -189,6 +229,18 @@ export default function Index() {
                             )}
                         />
                     )}
+            <Dialog isVisible={visible} onBackdropPress={hideDialog}>
+              <Dialog.Title title="Rate service" />
+              <Rating
+                type="star"
+                startingValue={1}
+                imageSize={30}
+                onFinishRating={handleRatingCompleted}
+              />
+              <Dialog.Actions>
+                <Button onPress={handleSubmit}>Submit</Button>
+              </Dialog.Actions>
+            </Dialog>
                 </View>
             </SafeAreaView>
         </View>
@@ -226,6 +278,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 30,
         borderRadius: 20,
         alignItems: "center",
+        marginHorizontal: 5,
         justifyContent: "center",
         height: 40,
     },
