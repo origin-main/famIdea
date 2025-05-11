@@ -8,8 +8,8 @@ import { supabase } from "@/utils/supabase";
 import { useAuth } from "@/context/AuthContext";
 import { router } from "expo-router";
 import { getPicture } from "@/utils/common";
-import { Dialog } from '@rneui/themed';
-import { Rating } from 'react-native-ratings';
+import { Dialog } from "@rneui/themed";
+import { Rating } from "react-native-ratings";
 
 type Appointment = {
     id: string;
@@ -21,6 +21,8 @@ type Appointment = {
         address: string;
         pictureUrl: string | null;
     };
+    rating: number | null;
+    serviceName: string | null;
 };
 
 export default function Index() {
@@ -32,6 +34,7 @@ export default function Index() {
 
     const [visible, setVisible] = useState(false);
     const [rating, setRating] = useState(0);
+    const [currentlyRating, setCurrentlyRating] = useState<Appointment | null>(null);
 
     const showDialog = () => setVisible(true);
     const hideDialog = () => setVisible(false);
@@ -40,12 +43,27 @@ export default function Index() {
         setRating(value);
     };
 
-    const handleSubmit = () => {
-        Alert.alert('Thanks for rating!', `You rated ${rating} stars.`);
+    const handleSubmit = async () => {
+        if (!user || !currentlyRating) return;
+        const { error } = await supabase.from("ratings").insert([
+            {
+                patient_id: user.id,
+                birth_center_id: currentlyRating?.birthCenter.id,
+                rating,
+                appointment_id: currentlyRating?.id,
+            },
+        ]);
+
+        if (error) {
+            console.error("Insert rating error:", error.message);
+            throw new Error("Failed to insert rating");
+        }
+        await fetchAppointments();
+        Alert.alert("Thanks for rating!", `You rated ${rating} stars.`);
         hideDialog();
     };
 
-    const BUTTONS = ["Active", "Pending", "Completed", "History" ];
+    const BUTTONS = ["Active", "Pending", "Completed", "History"];
 
     useEffect(() => {
         fetchAppointments();
@@ -59,7 +77,11 @@ export default function Index() {
             .from("appointments")
             .select(
                 `id, appointment_date, status,
-                birth_centers:birth_center_id (id, name, address, picture_url)`
+                birth_centers:birth_center_id (id, name, address, picture_url), ratings(rating),
+                services:service_id (
+                    id,
+                    services_list (name)
+                )`
             )
             .eq("patient_id", user.id)
             .order("updated_at", { ascending: false });
@@ -77,6 +99,8 @@ export default function Index() {
                     address: appt.birth_centers.address,
                     pictureUrl: getPicture(appt.birth_centers.picture_url),
                 },
+                rating: appt.ratings?.[0]?.rating ?? null,
+                serviceName: appt.services?.services_list?.name ?? null,
             }));
 
             setAppointments(appointments);
@@ -100,10 +124,6 @@ export default function Index() {
             return appt.status !== "approved" && appt.status !== "pending";
         }
     });
-
-    const getRating = () => {
-        return (Math.random() * 2 + 3).toFixed(1);
-    };
 
     const handleApptClick = (id: string) => {
         router.push({
@@ -186,7 +206,7 @@ export default function Index() {
                                                     </Text>
                                                 </View>
                                             )}
-                                            <View style={{ flexDirection: "row" }}>
+                                            <View style={{ flexDirection: "row", marginBottom: item.rating || item.status === "completed" ? 20 : 0 }}>
                                                 <Image
                                                     style={{
                                                         width: 60,
@@ -204,32 +224,37 @@ export default function Index() {
                                                 />
                                                 <View style={{ flexDirection: "column", gap: 5, flex: 1 }}>
                                                     <Text style={{ fontWeight: "bold" }}>{item.birthCenter.name}</Text>
-                                                    <Text style={{ width: "70%" }} numberOfLines={2}>
+                                                    <Text style={{ width: "65%" }} numberOfLines={2}>
                                                         {item.birthCenter.address}
+                                                    </Text>
+                                                    <Text style={{ width: "65%" }} numberOfLines={1}>
+                                                        Service: {item.serviceName}
                                                     </Text>
                                                 </View>
                                             </View>
 
                                             <View style={styles.rating}>
-                                                {
-                                                    //change null to getRating() to only show button when rating is null
-                                                    null == null && active === 2 ? (
-                                                        <Button mode="contained-tonal" onPress={showDialog}>Rate</Button>
-                                                    ) : (
-                                                        <>
-                                                            <Text>{getRating()}</Text>
-                                                            <Ionicons name="star" size={15} color="gold" />
-                                                        </>
-                                                    )
-                                                }
+                                                {!item.rating && item.status === "completed" && (
+                                                    <Button
+                                                        mode="contained-tonal"
+                                                        onPress={() => {
+                                                            setCurrentlyRating(item);
+                                                            showDialog();
+                                                        }}
+                                                    >
+                                                        Rate
+                                                    </Button>
+                                                )}
+                                                {item.rating && (
+                                                    <>
+                                                        <Text>You rated: {item.rating}</Text>
+                                                        <Ionicons name="star" size={15} color="gold" />
+                                                    </>
+                                                )}
                                                 <Dialog isVisible={visible} onBackdropPress={hideDialog}>
                                                     <Dialog.Title title={item.birthCenter.name} />
-                                                    <Rating
-                                                        type="star"
-                                                        startingValue={1}
-                                                        imageSize={30}
-                                                        onFinishRating={handleRatingCompleted}
-                                                    />
+                                                    <Text style={{ marginBottom: 10 }}>Rating:</Text>
+                                                    <Rating type="star" startingValue={1} imageSize={30} onFinishRating={handleRatingCompleted} />
                                                     <Dialog.Actions>
                                                         <Button onPress={handleSubmit}>Submit</Button>
                                                     </Dialog.Actions>
@@ -241,7 +266,6 @@ export default function Index() {
                             )}
                         />
                     )}
-                    
                 </View>
             </SafeAreaView>
         </View>

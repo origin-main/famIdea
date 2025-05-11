@@ -22,6 +22,7 @@ type BirthCenter = {
     longitude?: string;
     pictureUrl: string | null;
     distance?: number;
+    rating: number;
 };
 
 const DISTANCE_THRESHOLD_KM = 5; // 5km
@@ -73,7 +74,7 @@ export default function Index() {
 
         const { data, error } = await supabase
             .from("birth_centers")
-            .select("id, name, address, contact_number, description, latitude, longitude, picture_url")
+            .select("id, name, address, contact_number, description, latitude, longitude, picture_url, ratings:ratings(rating)")
             .eq("status", "approved");
 
         if (error) {
@@ -84,43 +85,56 @@ export default function Index() {
 
         const birthCenters = data
             .filter((center) => center.latitude != null && center.longitude != null)
-            .map((center) => ({
-                id: center.id,
-                name: center.name,
-                address: center.address,
-                contactNumber: center.contact_number,
-                description: center.description,
-                latitude: center.latitude,
-                longitude: center.longitude,
-                pictureUrl: getPicture(center.picture_url),
-            }));
+            .map((center) => {
+                const ratings = center.ratings || [];
+                const averageRating = ratings.length > 0 ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length : 0;
 
-        const searchWithinRadius = (radiusMeters: number) => {
-            return birthCenters
-                .map((center) => {
+                return {
+                    id: center.id,
+                    name: center.name,
+                    address: center.address,
+                    contactNumber: center.contact_number,
+                    description: center.description,
+                    latitude: center.latitude,
+                    longitude: center.longitude,
+                    rating: averageRating,
+                    pictureUrl: getPicture(center.picture_url),
+                };
+            });
+
+        const groupByRating = (centers: any) => {
+            return {
+                high: centers.filter((c: any) => c.rating >= 4),
+                mid: centers.filter((c: any) => c.rating >= 3 && c.rating < 4),
+                low: centers.filter((c: any) => c.rating < 3),
+            };
+        };
+
+        const searchWithinRadius = (group: any, radiusMeters: any) => {
+            return group
+                .map((center: any) => {
                     const distance = getDistance(location!, {
                         latitude: center.latitude,
                         longitude: center.longitude,
                     });
-
-                    return {
-                        ...center,
-                        distance,
-                    };
+                    return { ...center, distance };
                 })
-                .filter((center) => center.distance <= radiusMeters)
-                .sort((a, b) => a.distance - b.distance);
+                .filter((center: any) => center.distance <= radiusMeters)
+                .sort((a: any, b: any) => a.distance - b.distance);
         };
 
-        let radius = DISTANCE_THRESHOLD_METERS; // Start with 5km
-        let nearbyCenters: typeof birthCenters = [];
+        const { high, mid, low } = groupByRating(birthCenters);
+        const ratingGroups = [high, mid, low];
 
-        while (nearbyCenters.length === 0 && radius <= 20000) {
-            // Max 20km to avoid infinite loop
-            nearbyCenters = searchWithinRadius(radius);
-            if (nearbyCenters.length === 0) {
-                radius += 1000; // Increase by 1km
+        let nearbyCenters = [];
+
+        for (const group of ratingGroups) {
+            let radius = DISTANCE_THRESHOLD_METERS; // Start at 5km
+            while (nearbyCenters.length === 0 && radius <= 20000) {
+                nearbyCenters = searchWithinRadius(group, radius);
+                if (nearbyCenters.length === 0) radius += 1000;
             }
+            if (nearbyCenters.length > 0) break;
         }
 
         setNearbyBirthCenters(nearbyCenters);
@@ -154,9 +168,6 @@ export default function Index() {
             params: { id: centerId },
         });
     };
-
-    // Get random static rating
-    const getRating = () => (Math.random() * 2 + 3).toFixed(1);
 
     const renderServiceRows = () => {
         const rows = [];
@@ -303,12 +314,12 @@ export default function Index() {
                             paddingBottom: 5,
                         }}
                     >
-                        <Text style={{ fontSize: 15, fontWeight: "bold" }}>Birthing Centers near you</Text>
+                        <Text style={{ fontSize: 15, fontWeight: "bold" }}>Recommended for you</Text>
                         <Ionicons
                             size={28}
                             name="arrow-forward-circle"
                             onPress={() => {
-                                router.push("/(tabs)/home/search-page");
+                                router.push("/(tabs)/home/recommended");
                             }}
                             color={"black"}
                         />
@@ -342,13 +353,16 @@ export default function Index() {
                                                     : require("@/assets/images/service-icons/health-clinic.png")
                                             }
                                         />
-                                        <View style={{ alignItems: "center", gap: 3 }}>
-                                            <Text style={{ fontSize: 12, fontWeight: "bold" }} numberOfLines={1}>
+                                        <View style={{ alignItems: "center", gap: 3, width: "90%" }}>
+                                            <Text
+                                                style={{ fontSize: 12, fontWeight: "bold", alignSelf: "flex-start", width: "100%" }}
+                                                numberOfLines={1}
+                                            >
                                                 {data.name}
                                             </Text>
                                             <View style={{ flexDirection: "row", gap: 5, alignSelf: "flex-start", alignItems: "center" }}>
                                                 <Ionicons size={15} name="star" color={"gold"} />
-                                                <Text style={{ fontSize: 12 }}>{getRating()}</Text>
+                                                <Text style={{ fontSize: 12 }}>{data.rating}</Text>
                                             </View>
                                             <Text style={{ fontSize: 11, color: "grey", alignSelf: "flex-start" }}>{`${(
                                                 data.distance! / 1000

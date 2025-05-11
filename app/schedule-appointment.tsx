@@ -117,6 +117,11 @@ export default function Index() {
 
         const takenTimes = appointments?.map((appt) => new Date(appt.appointment_date).toISOString().slice(11, 16));
 
+        const now = new Date();
+        const isToday = date === now.toISOString().slice(0, 10);
+        const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
+        console.log(isToday, currentTimeMinutes);
+
         setTimeSlots(
             slots.map((slot: any) => {
                 const slotDate = new Date(slot.start);
@@ -129,10 +134,17 @@ export default function Index() {
                 const slotTimeStr = slotDate.toISOString().slice(11, 16); // "HH:MM" in UTC
                 const isTaken = takenTimes.includes(slotTimeStr);
 
+                const slotHour = slotDate.getHours();
+                const slotMinutes = slotDate.getMinutes();
+                const slotTotalMinutes = slotHour * 60 + slotMinutes;
+
+                const isPast = isToday && slotTotalMinutes <= currentTimeMinutes;
+                console.log(isPast);
+
                 return {
                     label: localTime,
                     value: `${date}T${slotTimeStr}:00.000Z`,
-                    available: !isTaken,
+                    available: !isTaken && !isPast,
                 };
             })
         );

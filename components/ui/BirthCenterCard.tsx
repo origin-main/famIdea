@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { IconButton } from "react-native-paper";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { COLORS } from "../constants";
 import { supabase } from "@/utils/supabase";
 import { useAuth } from "@/context/AuthContext";
@@ -21,6 +21,9 @@ type BirthCenter = {
     openingTime: string;
     closingTime: string;
     availableDays: string[];
+    distance?: number;
+    services?: any;
+    availableRooms?: number;
 };
 
 type Props = {
@@ -88,9 +91,6 @@ const BirthCenterCard = ({ data, onPress, disabled }: Props) => {
         setSelected((prev) => !prev);
     };
 
-    // Get random static rating
-    const getRating = () => (Math.random() * 2 + 3).toFixed(1);
-
     const { hours, isOpen, isAvailableToday } = getFormattedHours(data.openingTime, data.closingTime, data.availableDays);
     const today = format(new Date(), "EEE");
 
@@ -130,11 +130,24 @@ const BirthCenterCard = ({ data, onPress, disabled }: Props) => {
                         <Text style={styles.label}>Phone: </Text>
                         {data.contactNumber}
                     </Text>
+                    <View style={{ flexDirection: "row", gap: 10, alignItems: "center", width: 20 }}>
+                        <View style={{ flexDirection: "row", gap: 3, alignItems: "center" }}>
+                            <MaterialIcons size={16} name="meeting-room" color="black" />
+                            <Text style={styles.text}>{data?.availableRooms || "0"}</Text>
+                        </View>
+                        <View style={{ flexDirection: "row", gap: 3, alignItems: "center" }}>
+                            <MaterialCommunityIcons size={16} name="hand-heart" color="black" />
+                            <Text style={styles.text}>{data?.services?.length}</Text>
+                        </View>
+                    </View>
                 </View>
             </View>
             <View style={styles.rating}>
+                {typeof data?.distance == "number" && (
+                    <Text style={{ fontSize: 11, color: "grey", alignSelf: "flex-start" }}>{(data.distance / 1000).toFixed(1)} km away</Text>
+                )}
                 <Ionicons size={15} name="star" color="gold" />
-                <Text style={styles.ratingText}>{data.rating || getRating()}</Text>
+                <Text style={styles.ratingText}>{data.rating}</Text>
             </View>
         </TouchableOpacity>
     );
@@ -145,7 +158,7 @@ export default BirthCenterCard;
 const styles = StyleSheet.create({
     container: {
         width: "100%",
-        height: 180,
+        height: 200,
         backgroundColor: COLORS.white,
         borderColor: "black",
         borderWidth: 1,

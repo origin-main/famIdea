@@ -3,7 +3,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS } from "@/components/constants";
 import { ActivityIndicator, Button, Checkbox, Dialog, IconButton, Portal, TextInput } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Dropdown } from "react-native-paper-dropdown";
 import { supabase } from "@/utils/supabase";
@@ -29,7 +29,10 @@ type BirthCenter = {
     services: number[];
 };
 
-export default function Index() {
+const DISTANCE_THRESHOLD_KM = 5; // 5km
+const DISTANCE_THRESHOLD_METERS = DISTANCE_THRESHOLD_KM * 1000;
+
+export default function Recommended() {
     const router = useRouter();
     const { filter } = useLocalSearchParams();
     const [loading, setLoading] = useState(false);
@@ -37,22 +40,22 @@ export default function Index() {
 
     // Search, filter, sort
     const [searchValue, setSearchValue] = useState("");
-    const [sortValue, setSortValue] = useState("");
+    const [sortValue, setSortValue] = useState("location");
     const [filters, setFilters] = useState<{ label: string; value: number }[] | []>([]);
 
     const [birthCenters, setBirthCenters] = useState<BirthCenter[]>([]);
     const [selectedFilters, setSelectedFilters] = useState<number[]>(filter ? [Number(filter)] : []);
 
     const options = [
-        { label: "Name", value: "name" },
         { label: "Location", value: "location" },
-        { label: "Rating", value: "rating" },
+        { label: "No. of Services", value: "services" },
+        { label: "Available Rooms", value: "rooms" },
     ];
 
     useEffect(() => {
         fetchBirthCenters();
         fetchServices();
-    }, []);
+    }, [location]);
 
     // Get user's current location
     useEffect(() => {
@@ -139,41 +142,87 @@ export default function Index() {
         );
     };
 
-    // Filter birth centers based on search input and services
-    const filteredCenters = birthCenters.filter((center) => {
-        const matchesSearch =
-            center.name.toLowerCase().includes(searchValue.toLowerCase()) || center.address.toLowerCase().includes(searchValue.toLowerCase());
+    const getSortedCenters = () => {
+        const filteredCenters = birthCenters.filter((center) => {
+            const matchesSearch =
+                center.name.toLowerCase().includes(searchValue.toLowerCase()) || center.address.toLowerCase().includes(searchValue.toLowerCase());
 
-        const matchesService = selectedFilters.length === 0 || selectedFilters.some((f) => center.services.includes(f));
+            const matchesService = selectedFilters.length === 0 || selectedFilters.some((f) => center.services.includes(f));
 
-        return matchesSearch && matchesService;
-    });
+            return matchesSearch && matchesService;
+        });
 
-    const sortedCenters = [...filteredCenters].sort((a, b) => {
-        if (sortValue === "name") {
-            return a.name.localeCompare(b.name); // Alphabetical (A-Z)
+        const groupByRating = (centers: any[]) => {
+            return {
+                high: centers.filter((c) => c.rating >= 4),
+                mid: centers.filter((c) => c.rating >= 3 && c.rating < 4),
+                low: centers.filter((c) => c.rating < 3),
+            };
+        };
+
+        const searchWithinGroup = (group: any[], sortValue: string) => {
+            let sortedGroup = [...group];
+
+            if (sortValue === "location" && location) {
+                sortedGroup = sortedGroup
+                    .map((center) => ({
+                        ...center,
+                        distance: getDistance(location, {
+                            latitude: center.latitude,
+                            longitude: center.longitude,
+                        }),
+                    }))
+                    .sort((a, b) => a.distance - b.distance);
+            } else if (sortValue === "services") {
+                sortedGroup.sort((a, b) => b.services.length - a.services.length);
+            } else if (sortValue === "rooms") {
+                sortedGroup.sort((a, b) => b.availableRooms - a.availableRooms);
+            }
+
+            return sortedGroup;
+        };
+
+        let result: any[] = [];
+
+        const { high, mid, low } = groupByRating(filteredCenters);
+        const ratingGroups = [high, mid, low];
+
+        for (const group of ratingGroups) {
+            if (sortValue === "location" && location) {
+                let radius = DISTANCE_THRESHOLD_METERS;
+                while (result.length === 0 && radius <= 20000) {
+                    const centersInRadius = group
+                        .map((center) => ({
+                            ...center,
+                            distance: getDistance(location, {
+                                latitude: center.latitude,
+                                longitude: center.longitude,
+                            }),
+                        }))
+                        .filter((center) => center.distance <= radius)
+                        .sort((a, b) => a.distance - b.distance);
+
+                    if (centersInRadius.length > 0) {
+                        result = centersInRadius;
+                        break;
+                    }
+
+                    radius += 1000;
+                }
+            } else {
+                result = searchWithinGroup(group, sortValue);
+                if (result.length > 0) break;
+            }
         }
 
-        if (sortValue === "location" && location) {
-            const distA = getDistance(location, {
-                latitude: a.latitude,
-                longitude: a.longitude,
-            });
+        return result;
+    };
 
-            const distB = getDistance(location, {
-                latitude: b.latitude,
-                longitude: b.longitude,
-            });
+    const sortedCenters = useMemo(() => {
+        if (birthCenters.length === 0 || !location) return [];
 
-            return distA - distB; // Nearest first
-        }
-
-        if (sortValue === "rating") {
-            return b.rating - a.rating; // Highest first
-        }
-
-        return 0; // Default case (no sorting)
-    });
+        return getSortedCenters();
+    }, [birthCenters, sortValue, searchValue, selectedFilters, location]);
 
     const handleCardClick = (centerId: string) => {
         router.push({
@@ -181,9 +230,6 @@ export default function Index() {
             params: { id: centerId },
         });
     };
-
-    // Get random static rating
-    const getRating = () => Number((Math.random() * 2 + 3).toFixed(1));
 
     const [filterDialogVisible, setFilterDialogVisible] = useState(false);
 
@@ -203,7 +249,7 @@ export default function Index() {
                             <Ionicons name="chevron-back" size={24} color="black" />
                         </TouchableOpacity>
                     </View>
-                    <Text style={styles.title}>Birthing Centers</Text>
+                    <Text style={styles.title}>Recommended for you</Text>
                 </View>
 
                 {/* Search filters */}
@@ -232,7 +278,7 @@ export default function Index() {
                             justifyContent: "space-between",
                         }}
                     >
-                        <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 10, width: 150 }}>
+                        <View style={{ flex: 1 }}>
                             <Dropdown
                                 mode="outlined"
                                 placeholder="Sort by"
@@ -295,14 +341,18 @@ export default function Index() {
                             justifyContent: "center",
                         }}
                     >
-                        <ScrollView
-                            showsVerticalScrollIndicator={false}
-                            refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchBirthCenters} />}
-                        >
-                            {sortedCenters.map((item, index) => (
-                                <BirthCenterCard data={item} key={index} onPress={() => handleCardClick(item.id)} />
-                            ))}
-                        </ScrollView>
+                        {sortedCenters.length == 0 ? (
+                            <Text style={{ textAlign: "center" }}>No centers found</Text>
+                        ) : (
+                            <ScrollView
+                                showsVerticalScrollIndicator={false}
+                                refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchBirthCenters} />}
+                            >
+                                {sortedCenters.map((item, index) => (
+                                    <BirthCenterCard data={item} key={index} onPress={() => handleCardClick(item.id)} />
+                                ))}
+                            </ScrollView>
+                        )}
                     </View>
                 )}
             </SafeAreaView>

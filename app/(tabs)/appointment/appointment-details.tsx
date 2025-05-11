@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { Image, View, StyleSheet, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { ActivityIndicator, Button, Divider, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Dialog } from '@rneui/themed';
+import { Dialog } from "@rneui/themed";
 
 type Appointment = {
     id: string;
@@ -27,6 +27,7 @@ type Appointment = {
         address: string;
         pictureUrl: string | null;
     };
+    details: any;
 };
 
 const AppointmentDetails = () => {
@@ -55,7 +56,8 @@ const AppointmentDetails = () => {
                 appointment_date,
                 status,
                 services:service_id (id, description, price, duration, services_list (name)),
-                birth_centers:birth_center_id (id, name, address, picture_url)`
+                birth_centers:birth_center_id (id, name, address, picture_url),
+                prenatal:prenatal-table (estimated_due_date, height, weight, pulse_rate, body_temperature, fundal_height)`
             )
             .eq("id", id)
             .single();
@@ -81,6 +83,7 @@ const AppointmentDetails = () => {
                     address: apptData.birth_centers.address,
                     pictureUrl: getPicture(apptData.birth_centers.picture_url),
                 },
+                details: apptData.prenatal[0] ?? null,
             };
 
             setAppointment(appointment);
@@ -148,157 +151,157 @@ const AppointmentDetails = () => {
                 <ActivityIndicator style={{ flex: 1 }} color={COLORS.darkBlue} />
             ) : (
                 <View style={{ flex: 1, padding: 30, justifyContent: "center", backgroundColor: "white" }}>
-                    <ScrollView
-                        showsVerticalScrollIndicator={false}
-                    >
-                    <View style={{ justifyContent: "center", alignItems: "center", width: "100%", padding: 10, gap: 20 }}>
-                        <View style={styles.imageContainer}>
-                            <Image
-                                style={styles.image}
-                                source={
-                                    appointment?.birthCenter.pictureUrl
-                                        ? { uri: appointment.birthCenter.pictureUrl }
-                                        : require("@/assets/images/service-icons/health-clinic.png")
-                                }
-                            />
-                        </View>
+                    <ScrollView showsVerticalScrollIndicator={false}>
+                        <View style={{ justifyContent: "center", alignItems: "center", width: "100%", padding: 10, gap: 20 }}>
+                            <View style={styles.imageContainer}>
+                                <Image
+                                    style={styles.image}
+                                    source={
+                                        appointment?.birthCenter.pictureUrl
+                                            ? { uri: appointment.birthCenter.pictureUrl }
+                                            : require("@/assets/images/service-icons/health-clinic.png")
+                                    }
+                                />
+                            </View>
 
-                        <Text style={{ fontWeight: "bold", fontSize: 18, width: "70%", textAlign: "center" }}>
-                            {appointment?.birthCenter.name || "Name"}
-                        </Text>
-                    </View>
-                    <Divider style={{ marginVertical: 10 }}></Divider>
-                    <View>
-                        <Text style={{ fontWeight: "bold", marginBottom: 10 }}>
-                            Service: <Text>{appointment?.service.name || "Service Name"}</Text>
-                        </Text>
-                        <Text style={{ fontWeight: "bold", marginBottom: 10 }}>
-                            Price: <Text>{appointment?.service.price ? `₱${appointment.service.price.toLocaleString()}` : "Free"}</Text>
-                        </Text>
-                        <Text style={{ fontWeight: "bold", marginBottom: 10 }}>
-                            Appointment Date:{" "}
-                            <Text>
-                                {appointment?.appointmentDate
-                                    ? new Date(appointment?.appointmentDate).toLocaleDateString("en-US", {
-                                        month: "long",
-                                        day: "numeric",
-                                        year: "numeric",
-                                    })
-                                    : ""}
+                            <Text style={{ fontWeight: "bold", fontSize: 18, width: "70%", textAlign: "center" }}>
+                                {appointment?.birthCenter.name || "Name"}
                             </Text>
-                        </Text>
-                        <Text style={{ fontWeight: "bold", marginBottom: 10 }}>
-                            Appointment Time:{" "}
-                            <Text>
-                                {appointment?.appointmentDate
-                                    ? new Date(appointment?.appointmentDate).toLocaleTimeString("en-US", {
-                                        hour: "numeric",
-                                        minute: "2-digit",
-                                        hour12: true,
-                                    })
-                                    : ""}
+                        </View>
+                        <Divider style={{ marginVertical: 10 }}></Divider>
+                        <View>
+                            <Text>{appointment?.id}</Text>
+                            <Text style={{ fontWeight: "bold", marginBottom: 10 }}>
+                                Service: <Text>{appointment?.service.name || "Service Name"}</Text>
                             </Text>
-                        </Text>
-                        <Text style={{ fontWeight: "bold" }}>
-                            Status:{" "}
-                            <Text>{appointment?.status ? appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1) : "Inactive"}</Text>
-                        </Text>
-                    </View>
-                    <Divider style={{ marginVertical: 10 }}></Divider>
-                    <View>
-                        <Text style={{ fontWeight: "bold", marginBottom: 10 }}>Description</Text>
-                        <ScrollView style={{ height: 150, padding: 10, backgroundColor: COLORS.grey, borderRadius: 5 }}>
-                            <Text style={{ marginBottom: 10, paddingBottom: 10 }}>{appointment?.service.description || "Description"}</Text>
-                        </ScrollView>
-                    </View>
-                    <View
-                        style={{
-                            alignItems: "center",
-                            flexDirection: "row",
-                            justifyContent: "space-between",
-                            gap: 20,
-                            marginTop: 20,
-                        }}
-                    >
-                        {appointment?.status === "pending" && (
+                            <Text style={{ fontWeight: "bold", marginBottom: 10 }}>
+                                Price: <Text>{appointment?.service.price ? `₱${appointment.service.price.toLocaleString()}` : "Free"}</Text>
+                            </Text>
+                            <Text style={{ fontWeight: "bold", marginBottom: 10 }}>
+                                Appointment Date:{" "}
+                                <Text>
+                                    {appointment?.appointmentDate
+                                        ? new Date(appointment?.appointmentDate).toLocaleDateString("en-US", {
+                                              month: "long",
+                                              day: "numeric",
+                                              year: "numeric",
+                                          })
+                                        : ""}
+                                </Text>
+                            </Text>
+                            <Text style={{ fontWeight: "bold", marginBottom: 10 }}>
+                                Appointment Time:{" "}
+                                <Text>
+                                    {appointment?.appointmentDate
+                                        ? new Date(appointment?.appointmentDate).toLocaleTimeString("en-US", {
+                                              hour: "numeric",
+                                              minute: "2-digit",
+                                              hour12: true,
+                                          })
+                                        : ""}
+                                </Text>
+                            </Text>
+                            <Text style={{ fontWeight: "bold" }}>
+                                Status:{" "}
+                                <Text>
+                                    {appointment?.status ? appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1) : "Inactive"}
+                                </Text>
+                            </Text>
+                        </View>
+                        <Divider style={{ marginVertical: 10 }}></Divider>
+                        <View>
+                            <Text style={{ fontWeight: "bold", marginBottom: 10 }}>Description</Text>
+                            <ScrollView style={{ height: 150, padding: 10, backgroundColor: COLORS.grey, borderRadius: 5 }}>
+                                <Text style={{ marginBottom: 10, paddingBottom: 10 }}>{appointment?.service.description || "Description"}</Text>
+                            </ScrollView>
+                        </View>
+                        <View
+                            style={{
+                                alignItems: "center",
+                                flexDirection: "row",
+                                justifyContent: "space-between",
+                                gap: 20,
+                                marginTop: 20,
+                            }}
+                        >
+                            {appointment?.status === "pending" && (
+                                <Button
+                                    mode="contained"
+                                    style={{ flex: 1 }}
+                                    buttonColor={COLORS.error}
+                                    textColor="black"
+                                    onPress={() => handleCancelClick()}
+                                >
+                                    Cancel
+                                </Button>
+                            )}
                             <Button
                                 mode="contained"
                                 style={{ flex: 1 }}
-                                buttonColor={COLORS.error}
+                                buttonColor={COLORS.lightBlue}
                                 textColor="black"
-                                onPress={() => handleCancelClick()}
+                                onPress={() => handleMessageClick()}
                             >
-                                Cancel
+                                Message
                             </Button>
+                        </View>
+                        {appointment?.details && (
+                            <View
+                                style={{
+                                    alignItems: "center",
+                                    flexDirection: "row",
+                                    justifyContent: "space-between",
+                                    marginTop: 20,
+                                }}
+                            >
+                                <Button
+                                    mode="contained"
+                                    style={{ flex: 1 }}
+                                    buttonColor={COLORS.lightBlue}
+                                    textColor="black"
+                                    onPress={() => showDialog()}
+                                >
+                                    View Details
+                                </Button>
+                            </View>
                         )}
-                        <Button
-                            mode="contained"
-                            style={{ flex: 1 }}
-                            buttonColor={COLORS.lightBlue}
-                            textColor="black"
-                            onPress={() => handleMessageClick()}
-                        >
-                            Message
-                        </Button>
-                    </View>
-                    <View 
-                    style={{
-                            alignItems: "center",
-                            flexDirection: "row",
-                            justifyContent: "space-between",
-                            marginTop: 20,
-                        }}>
-                        <Button
-                            mode="contained"
-                            style={{ flex: 1 }}
-                            buttonColor={COLORS.lightBlue}
-                            textColor="black"
-                            onPress={() => showDialog()}
-                        >
-                            View Details
-                        </Button>
-                    </View>
                     </ScrollView>
                     <Dialog isVisible={visible} onBackdropPress={hideDialog}>
                         <Dialog.Title title="Prenatal Record Details" />
-
                         <View style={styles.modal}>
-
                             <View>
                                 <Text style={{ color: "grey" }}>Estimated Due Date</Text>
-                                <Text style={{ fontSize: 20 }} >2025-05-22 10:00</Text>
+                                <Text style={{ fontSize: 20 }}>{new Date(appointment?.details?.estimated_due_date)?.toLocaleDateString()}</Text>
                             </View>
 
                             <View>
                                 <Text style={{ color: "grey" }}>Weight</Text>
-                                <Text style={{ fontSize: 20 }} >55 kg</Text>
+                                <Text style={{ fontSize: 20 }}>{appointment?.details?.weight} kg</Text>
                             </View>
 
                             <View>
                                 <Text style={{ color: "grey" }}>Body Temperature</Text>
-                                <Text style={{ fontSize: 20 }} >37 °C</Text>
+                                <Text style={{ fontSize: 20 }}>{appointment?.details?.body_temperature} °C</Text>
                             </View>
 
                             <View>
                                 <Text style={{ color: "grey" }}>Height</Text>
-                                <Text style={{ fontSize: 20 }} >167 cm</Text>
+                                <Text style={{ fontSize: 20 }}>{appointment?.details?.height} cm</Text>
                             </View>
 
                             <View>
                                 <Text style={{ color: "grey" }}>Pulse Rate</Text>
-                                <Text style={{ fontSize: 20 }} >90 bpm</Text>
+                                <Text style={{ fontSize: 20 }}>{appointment?.details?.pulse_rate} bpm</Text>
                             </View>
 
                             <View>
                                 <Text style={{ color: "grey" }}>Fundal Height</Text>
-                                <Text style={{ fontSize: 20 }} >178 cm</Text>
+                                <Text style={{ fontSize: 20 }}>{appointment?.details?.fundal_height} cm</Text>
                             </View>
-
                         </View>
 
                         <Dialog.Actions>
-                            <Button onPress={() => {}} mode="contained-tonal">Edit Record</Button>
-                            <Button onPress={hideDialog} >Close</Button>
+                            <Button onPress={hideDialog}>Close</Button>
                         </Dialog.Actions>
                     </Dialog>
                 </View>
@@ -312,7 +315,7 @@ export default AppointmentDetails;
 const styles = StyleSheet.create({
     modal: {
         padding: 20,
-        gap: 20
+        gap: 20,
     },
     container: {
         backgroundColor: "white",

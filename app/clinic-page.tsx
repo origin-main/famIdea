@@ -29,6 +29,9 @@ type BirthCenter = {
     closingTime: string;
     availableDays: string[];
     services: Service[];
+    rating: number;
+    distance?: number;
+    availableRooms?: number;
 };
 
 type DayKey = "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat";
@@ -54,6 +57,8 @@ export default function Index() {
             .from("birth_centers")
             .select(
                 `id, name, address, contact_number, description, latitude, longitude, picture_url, opening_time, closing_time, available_days,
+                available_rooms,
+                ratings:ratings(rating),
                 services (
                   id,
                   service_id,
@@ -71,6 +76,9 @@ export default function Index() {
             return null;
         }
 
+        const ratings = data.ratings || [];
+        const averageRating = ratings.length > 0 ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length : 0;
+
         setBirthCenterData({
             id: data.id,
             name: data.name,
@@ -83,6 +91,8 @@ export default function Index() {
             openingTime: data.opening_time,
             closingTime: data.closing_time,
             availableDays: data.available_days,
+            availableRooms: data.available_rooms,
+            rating: averageRating,
             services: data.services.map((s: any) => ({
                 id: s.id,
                 serviceId: s.services_list.id,

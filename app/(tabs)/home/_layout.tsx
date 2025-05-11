@@ -10,6 +10,7 @@ export default function HomeLayout() {
         <Stack>
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="search-page" options={{ headerShown: false }} />
+            <Stack.Screen name="recommended" options={{ headerShown: false }} />
             <Stack.Screen name="notifications" options={{ headerShown: false }} />
         </Stack>
     );

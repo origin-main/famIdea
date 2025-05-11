@@ -14,6 +14,7 @@ type BirthCenter = {
     name: string;
     address: string;
     pictureUrl: string | null;
+    rating: number;
 };
 
 export default function Index() {
@@ -32,20 +33,23 @@ export default function Index() {
 
         const { data, error } = await supabase
             .from("preferred_centers")
-            .select("birth_center:birth_centers (id, name, address, picture_url)")
+            .select("birth_center:birth_centers (id, name, address, picture_url, ratings:ratings(rating))")
             .eq("patient_id", user.id);
-
-        console.log(data);
 
         if (error) {
             console.error("Error fetching preferred birth centers:", error);
         } else {
-            const birthCenters = data?.map((item: any) => ({
-                id: item.birth_center.id,
-                name: item.birth_center.name,
-                address: item.birth_center.address,
-                pictureUrl: getPicture(item.birth_center.picture_url),
-            }));
+            const birthCenters = data?.map((item: any) => {
+                const ratings = item.birth_center.ratings || [];
+                const averageRating = ratings.length > 0 ? ratings.reduce((sum: any, r: any) => sum + r.rating, 0) / ratings.length : 0;
+                return {
+                    id: item.birth_center.id,
+                    name: item.birth_center.name,
+                    address: item.birth_center.address,
+                    pictureUrl: getPicture(item.birth_center.picture_url),
+                    rating: averageRating,
+                };
+            });
 
             setFavorites(birthCenters);
         }
@@ -129,11 +133,21 @@ export default function Index() {
                                                     >
                                                         {item.address}
                                                     </Text>
-                                                    <Text style={{ alignSelf: "flex-end" }}>
-                                                        {getRating()} <Ionicons name="star" size={15} color="gold" />
-                                                    </Text>
                                                 </View>
                                             </View>
+                                        </View>
+                                        <View
+                                            style={{
+                                                position: "absolute",
+                                                bottom: 10,
+                                                right: 10,
+                                                alignItems: "center",
+                                                flexDirection: "row",
+                                                gap: 5,
+                                            }}
+                                        >
+                                            <Text>{item.rating}</Text>
+                                            <Ionicons name="star" size={15} color="gold" />
                                         </View>
                                     </Card.Content>
                                 </Card>
