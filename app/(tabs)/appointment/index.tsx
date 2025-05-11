@@ -45,7 +45,7 @@ export default function Index() {
         hideDialog();
     };
 
-    const BUTTONS = ["Active", "Pending", "History", "Completed"];
+    const BUTTONS = ["Active", "Pending", "Completed", "History" ];
 
     useEffect(() => {
         fetchAppointments();
@@ -93,11 +93,11 @@ export default function Index() {
             // "Pending" - only pending
             return appt.status === "pending";
         } else if (active === 2) {
-            // "History" - all statuses except approved and pending
-            return appt.status !== "approved" && appt.status !== "pending";
-        } else {
             // "Completed" - only completed
             return appt.status == "completed";
+        } else {
+            // "History" - all statuses except approved and pending
+            return appt.status !== "approved" && appt.status !== "pending";
         }
     });
 
@@ -179,7 +179,7 @@ export default function Index() {
                                 >
                                     <Card style={{ width: "100%", marginBottom: 10 }}>
                                         <Card.Content style={{ width: "100%" }}>
-                                            {active === 2 && (
+                                            {active === 3 && (
                                                 <View style={{ position: "absolute", top: 10, right: 10 }}>
                                                     <Text style={{ color: "gray" }}>
                                                         {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
@@ -213,7 +213,7 @@ export default function Index() {
                                             <View style={styles.rating}>
                                                 {
                                                     //change null to getRating() to only show button when rating is null
-                                                    null == null && active === 3 ? (
+                                                    null == null && active === 2 ? (
                                                         <Button mode="contained-tonal" onPress={showDialog}>Rate</Button>
                                                     ) : (
                                                         <>
@@ -222,6 +222,18 @@ export default function Index() {
                                                         </>
                                                     )
                                                 }
+                                                <Dialog isVisible={visible} onBackdropPress={hideDialog}>
+                                                    <Dialog.Title title={item.birthCenter.name} />
+                                                    <Rating
+                                                        type="star"
+                                                        startingValue={1}
+                                                        imageSize={30}
+                                                        onFinishRating={handleRatingCompleted}
+                                                    />
+                                                    <Dialog.Actions>
+                                                        <Button onPress={handleSubmit}>Submit</Button>
+                                                    </Dialog.Actions>
+                                                </Dialog>
                                             </View>
                                         </Card.Content>
                                     </Card>
@@ -229,18 +241,7 @@ export default function Index() {
                             )}
                         />
                     )}
-                    <Dialog isVisible={visible} onBackdropPress={hideDialog}>
-                        <Dialog.Title title="Rate service" />
-                        <Rating
-                            type="star"
-                            startingValue={1}
-                            imageSize={30}
-                            onFinishRating={handleRatingCompleted}
-                        />
-                        <Dialog.Actions>
-                            <Button onPress={handleSubmit}>Submit</Button>
-                        </Dialog.Actions>
-                    </Dialog>
+                    
                 </View>
             </SafeAreaView>
         </View>
