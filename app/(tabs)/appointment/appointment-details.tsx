@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { Image, View, StyleSheet, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { ActivityIndicator, Button, Divider, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Dialog } from '@rneui/themed';
 
 type Appointment = {
     id: string;
@@ -33,6 +34,11 @@ const AppointmentDetails = () => {
     const { user } = useAuth();
     const [appointment, setAppointment] = useState<Appointment | null>(null);
     const [loading, setLoading] = useState(false);
+
+    const [visible, setVisible] = useState(false);
+
+    const showDialog = () => setVisible(true);
+    const hideDialog = () => setVisible(false);
 
     useEffect(() => {
         if (id) {
@@ -142,6 +148,9 @@ const AppointmentDetails = () => {
                 <ActivityIndicator style={{ flex: 1 }} color={COLORS.darkBlue} />
             ) : (
                 <View style={{ flex: 1, padding: 30, justifyContent: "center", backgroundColor: "white" }}>
+                    <ScrollView
+                        showsVerticalScrollIndicator={false}
+                    >
                     <View style={{ justifyContent: "center", alignItems: "center", width: "100%", padding: 10, gap: 20 }}>
                         <View style={styles.imageContainer}>
                             <Image
@@ -171,10 +180,10 @@ const AppointmentDetails = () => {
                             <Text>
                                 {appointment?.appointmentDate
                                     ? new Date(appointment?.appointmentDate).toLocaleDateString("en-US", {
-                                          month: "long",
-                                          day: "numeric",
-                                          year: "numeric",
-                                      })
+                                        month: "long",
+                                        day: "numeric",
+                                        year: "numeric",
+                                    })
                                     : ""}
                             </Text>
                         </Text>
@@ -183,10 +192,10 @@ const AppointmentDetails = () => {
                             <Text>
                                 {appointment?.appointmentDate
                                     ? new Date(appointment?.appointmentDate).toLocaleTimeString("en-US", {
-                                          hour: "numeric",
-                                          minute: "2-digit",
-                                          hour12: true,
-                                      })
+                                        hour: "numeric",
+                                        minute: "2-digit",
+                                        hour12: true,
+                                    })
                                     : ""}
                             </Text>
                         </Text>
@@ -232,6 +241,66 @@ const AppointmentDetails = () => {
                             Message
                         </Button>
                     </View>
+                    <View 
+                    style={{
+                            alignItems: "center",
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            marginTop: 20,
+                        }}>
+                        <Button
+                            mode="contained"
+                            style={{ flex: 1 }}
+                            buttonColor={COLORS.lightBlue}
+                            textColor="black"
+                            onPress={() => showDialog()}
+                        >
+                            View Details
+                        </Button>
+                    </View>
+                    </ScrollView>
+                    <Dialog isVisible={visible} onBackdropPress={hideDialog}>
+                        <Dialog.Title title="Prenatal Record Details" />
+
+                        <View style={styles.modal}>
+
+                            <View>
+                                <Text style={{ color: "grey" }}>Estimated Due Date</Text>
+                                <Text style={{ fontSize: 20 }} >2025-05-22 10:00</Text>
+                            </View>
+
+                            <View>
+                                <Text style={{ color: "grey" }}>Weight</Text>
+                                <Text style={{ fontSize: 20 }} >55 kg</Text>
+                            </View>
+
+                            <View>
+                                <Text style={{ color: "grey" }}>Body Temperature</Text>
+                                <Text style={{ fontSize: 20 }} >37 °C</Text>
+                            </View>
+
+                            <View>
+                                <Text style={{ color: "grey" }}>Height</Text>
+                                <Text style={{ fontSize: 20 }} >167 cm</Text>
+                            </View>
+
+                            <View>
+                                <Text style={{ color: "grey" }}>Pulse Rate</Text>
+                                <Text style={{ fontSize: 20 }} >90 bpm</Text>
+                            </View>
+
+                            <View>
+                                <Text style={{ color: "grey" }}>Fundal Height</Text>
+                                <Text style={{ fontSize: 20 }} >178 cm</Text>
+                            </View>
+
+                        </View>
+
+                        <Dialog.Actions>
+                            <Button onPress={() => {}} mode="contained-tonal">Edit Record</Button>
+                            <Button onPress={hideDialog} >Close</Button>
+                        </Dialog.Actions>
+                    </Dialog>
                 </View>
             )}
         </SafeAreaView>
@@ -243,6 +312,7 @@ export default AppointmentDetails;
 const styles = StyleSheet.create({
     modal: {
         padding: 20,
+        gap: 20
     },
     container: {
         backgroundColor: "white",

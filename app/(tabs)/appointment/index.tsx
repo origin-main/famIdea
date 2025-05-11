@@ -229,18 +229,18 @@ export default function Index() {
                             )}
                         />
                     )}
-            <Dialog isVisible={visible} onBackdropPress={hideDialog}>
-              <Dialog.Title title="Rate service" />
-              <Rating
-                type="star"
-                startingValue={1}
-                imageSize={30}
-                onFinishRating={handleRatingCompleted}
-              />
-              <Dialog.Actions>
-                <Button onPress={handleSubmit}>Submit</Button>
-              </Dialog.Actions>
-            </Dialog>
+                    <Dialog isVisible={visible} onBackdropPress={hideDialog}>
+                        <Dialog.Title title="Rate service" />
+                        <Rating
+                            type="star"
+                            startingValue={1}
+                            imageSize={30}
+                            onFinishRating={handleRatingCompleted}
+                        />
+                        <Dialog.Actions>
+                            <Button onPress={handleSubmit}>Submit</Button>
+                        </Dialog.Actions>
+                    </Dialog>
                 </View>
             </SafeAreaView>
         </View>
