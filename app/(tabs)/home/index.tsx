@@ -29,7 +29,7 @@ const DISTANCE_THRESHOLD_KM = 5; // 5km
 const DISTANCE_THRESHOLD_METERS = DISTANCE_THRESHOLD_KM * 1000;
 
 export default function Index() {
-    const { user } = useAuth();
+    const { user, setLocation: setUserLocation } = useAuth();
     const { notificationCount } = useAlert();
     const [profilePicture, setProfilePicture] = useState<string | null>(null);
     const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -58,6 +58,9 @@ export default function Index() {
 
             let location = await Location.getCurrentPositionAsync({});
             setLocation({ latitude: location.coords.latitude, longitude: location.coords.longitude });
+            if (location.coords.latitude && location.coords.longitude) {
+                setUserLocation({ latitude: location.coords.latitude, longitude: location.coords.longitude });
+            }
         })();
     }, []);
 

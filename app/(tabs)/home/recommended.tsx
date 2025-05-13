@@ -11,6 +11,7 @@ import BirthCenterCard from "@/components/ui/BirthCenterCard";
 import * as Location from "expo-location";
 import { getDistance } from "geolib";
 import { getPicture } from "@/utils/common";
+import { useAuth } from "@/context/AuthContext";
 
 type BirthCenter = {
     id: string;
@@ -33,10 +34,11 @@ const DISTANCE_THRESHOLD_KM = 5; // 5km
 const DISTANCE_THRESHOLD_METERS = DISTANCE_THRESHOLD_KM * 1000;
 
 export default function Recommended() {
+    const { location: userLocation } = useAuth();
     const router = useRouter();
     const { filter } = useLocalSearchParams();
     const [loading, setLoading] = useState(false);
-    const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+    const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(userLocation || null);
 
     // Search, filter, sort
     const [searchValue, setSearchValue] = useState("");
@@ -60,14 +62,15 @@ export default function Recommended() {
     // Get user's current location
     useEffect(() => {
         (async () => {
+            if (location) return;
             let { status } = await Location.requestForegroundPermissionsAsync();
             if (status !== "granted") {
                 console.log("Permission to access location was denied");
                 return;
             }
 
-            let location = await Location.getCurrentPositionAsync({});
-            setLocation({ latitude: location.coords.latitude, longitude: location.coords.longitude });
+            let currLocation = await Location.getCurrentPositionAsync({});
+            setLocation({ latitude: currLocation.coords.latitude, longitude: currLocation.coords.longitude });
         })();
     }, []);
 

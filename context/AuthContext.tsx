@@ -33,6 +33,8 @@ type AuthContextType = {
     user: User | null;
     loading: boolean;
     setUser: React.Dispatch<React.SetStateAction<User | null>>;
+    location: { latitude: number; longitude: number } | null;
+    setLocation: React.Dispatch<React.SetStateAction<{ latitude: number; longitude: number } | null>>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -40,6 +42,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
     // Fetch the patient data based on userId
     const fetchPatient = async (userId: string) => {
@@ -167,7 +170,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     // Return the context provider to make this state accessible globally
-    return <AuthContext.Provider value={{ user, loading, setUser }}>{children}</AuthContext.Provider>;
+    return <AuthContext.Provider value={{ user, loading, setUser, location, setLocation }}>{children}</AuthContext.Provider>;
 };
 
 // Custom hook to access Auth context
