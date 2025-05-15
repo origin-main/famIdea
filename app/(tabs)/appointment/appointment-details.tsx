@@ -57,7 +57,7 @@ const AppointmentDetails = () => {
                 status,
                 services:service_id (id, description, price, duration, services_list (name)),
                 birth_centers:birth_center_id (id, name, address, picture_url),
-                prenatal:prenatal-table (estimated_due_date, height, weight, pulse_rate, body_temperature, fundal_height)`
+                prenatal:prenatal-table (estimated_due_date, height, weight, pulse_rate, body_temperature, fundal_height, prescription)`
             )
             .eq("id", id)
             .single();
@@ -170,7 +170,6 @@ const AppointmentDetails = () => {
                         </View>
                         <Divider style={{ marginVertical: 10 }}></Divider>
                         <View>
-                            <Text>{appointment?.id}</Text>
                             <Text style={{ fontWeight: "bold", marginBottom: 10 }}>
                                 Service: <Text>{appointment?.service.name || "Service Name"}</Text>
                             </Text>
@@ -271,32 +270,39 @@ const AppointmentDetails = () => {
                         <View style={styles.modal}>
                             <View>
                                 <Text style={{ color: "grey" }}>Estimated Due Date</Text>
-                                <Text style={{ fontSize: 20 }}>{new Date(appointment?.details?.estimated_due_date)?.toLocaleDateString()}</Text>
+                                <Text style={{ fontSize: 16 }}>{new Date(appointment?.details?.estimated_due_date)?.toLocaleDateString()}</Text>
                             </View>
 
                             <View>
                                 <Text style={{ color: "grey" }}>Weight</Text>
-                                <Text style={{ fontSize: 20 }}>{appointment?.details?.weight} kg</Text>
+                                <Text style={{ fontSize: 16 }}>{appointment?.details?.weight} kg</Text>
                             </View>
 
                             <View>
                                 <Text style={{ color: "grey" }}>Body Temperature</Text>
-                                <Text style={{ fontSize: 20 }}>{appointment?.details?.body_temperature} °C</Text>
+                                <Text style={{ fontSize: 16 }}>{appointment?.details?.body_temperature} °C</Text>
                             </View>
 
                             <View>
                                 <Text style={{ color: "grey" }}>Height</Text>
-                                <Text style={{ fontSize: 20 }}>{appointment?.details?.height} cm</Text>
+                                <Text style={{ fontSize: 16 }}>{appointment?.details?.height} cm</Text>
                             </View>
 
                             <View>
                                 <Text style={{ color: "grey" }}>Pulse Rate</Text>
-                                <Text style={{ fontSize: 20 }}>{appointment?.details?.pulse_rate} bpm</Text>
+                                <Text style={{ fontSize: 16 }}>{appointment?.details?.pulse_rate} bpm</Text>
                             </View>
 
                             <View>
                                 <Text style={{ color: "grey" }}>Fundal Height</Text>
-                                <Text style={{ fontSize: 20 }}>{appointment?.details?.fundal_height} cm</Text>
+                                <Text style={{ fontSize: 16 }}>{appointment?.details?.fundal_height} cm</Text>
+                            </View>
+
+                            <View>
+                                <Text style={{ color: "grey" }}>Prescription</Text>
+                                <ScrollView style={{ height: 100, padding: 10, backgroundColor: COLORS.grey, borderRadius: 5 }}>
+                                    <Text style={{ marginBottom: 10, paddingBottom: 10 }}>{appointment?.details?.prescription}</Text>
+                                </ScrollView>
                             </View>
                         </View>
 
@@ -314,8 +320,8 @@ export default AppointmentDetails;
 
 const styles = StyleSheet.create({
     modal: {
-        padding: 20,
-        gap: 20,
+        padding: 10,
+        gap: 10,
     },
     container: {
         backgroundColor: "white",
