@@ -11,6 +11,7 @@ import BirthCenterCard from "@/components/ui/BirthCenterCard";
 import * as Location from "expo-location";
 import { getDistance } from "geolib";
 import { getPicture } from "@/utils/common";
+import { useAuth } from "@/context/AuthContext";
 
 type BirthCenter = {
     id: string;
@@ -27,13 +28,15 @@ type BirthCenter = {
     availableDays: string[];
     availableRooms: number;
     services: number[];
+    distance: number;
 };
 
 export default function Index() {
     const router = useRouter();
+    const { location: userLocation } = useAuth();
     const { filter } = useLocalSearchParams();
     const [loading, setLoading] = useState(false);
-    const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+    const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(userLocation || null);
 
     // Search, filter, sort
     const [searchValue, setSearchValue] = useState("");
@@ -52,21 +55,22 @@ export default function Index() {
     useEffect(() => {
         fetchBirthCenters();
         fetchServices();
-    }, []);
+    }, [location]);
 
     // Get user's current location
     useEffect(() => {
-        (async () => {
-            let { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== "granted") {
-                console.log("Permission to access location was denied");
-                return;
-            }
-
-            let location = await Location.getCurrentPositionAsync({});
-            setLocation({ latitude: location.coords.latitude, longitude: location.coords.longitude });
-        })();
-    }, []);
+            (async () => {
+                if (location) return;
+                let { status } = await Location.requestForegroundPermissionsAsync();
+                if (status !== "granted") {
+                    console.log("Permission to access location was denied");
+                    return;
+                }
+    
+                let currLocation = await Location.getCurrentPositionAsync({});
+                setLocation({ latitude: currLocation.coords.latitude, longitude: currLocation.coords.longitude });
+            })();
+        }, []);
 
     const fetchBirthCenters = async () => {
         setLoading(true);
